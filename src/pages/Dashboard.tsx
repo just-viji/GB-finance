@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Minus, TrendingUp, LogOut, User } from "lucide-react"; // Import User icon
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Plus, Minus, TrendingUp, LogOut, User } from "lucide-react";
 
 interface FinancialSummary {
   totalSales: number;
@@ -14,23 +14,31 @@ interface FinancialSummary {
   profit: number;
 }
 
+interface SalesByCategory {
+  category: string;
+  amount: number;
+}
+
+const COLORS = ['#0C9C59', '#FFBB28', '#FF8042', '#0088FE', '#00C49F', '#AF19FF', '#FF0000']; // Colors for pie chart segments
+
 const Dashboard = () => {
   const { user, isLoading } = useSupabase();
   const navigate = useNavigate();
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
-  const [loadingSummary, setLoadingSummary] = useState(true);
+  const [salesByCategory, setSalesByCategory] = useState<SalesByCategory[]>([]);
+  const [loadingData, setLoadingData] = useState(true);
 
   useEffect(() => {
-    const fetchFinancialSummary = async () => {
+    const fetchFinancialData = async () => {
       if (!user) return;
 
-      setLoadingSummary(true);
+      setLoadingData(true);
       const userId = user.id;
 
       // Fetch total sales
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
-        .select('amount')
+        .select('amount, category')
         .eq('user_id', userId);
 
       if (salesError) {
@@ -39,6 +47,18 @@ const Dashboard = () => {
       }
 
       const totalSales = salesData.reduce((sum, sale) => sum + (sale.amount || 0), 0);
+
+      // Group sales by category
+      const categoryMap = new Map<string, number>();
+      salesData.forEach(sale => {
+        const currentAmount = categoryMap.get(sale.category) || 0;
+        categoryMap.set(sale.category, currentAmount + (sale.amount || 0));
+      });
+      const formattedSalesByCategory = Array.from(categoryMap.entries()).map(([category, amount]) => ({
+        category,
+        amount,
+      }));
+      setSalesByCategory(formattedSalesByCategory);
 
       // Fetch total expenses
       const { data: expensesData, error: expensesError } = await supabase
@@ -58,13 +78,13 @@ const Dashboard = () => {
         totalExpenses,
         profit: totalSales - totalExpenses,
       });
-      setLoadingSummary(false);
+      setLoadingData(false);
     };
 
     if (user) {
-      fetchFinancialSummary();
+      fetchFinancialData();
     } else if (!isLoading) {
-      setLoadingSummary(false);
+      setLoadingData(false);
     }
   }, [user, isLoading]);
 
@@ -73,7 +93,7 @@ const Dashboard = () => {
     navigate('/login');
   };
 
-  if (isLoading || loadingSummary) {
+  if (isLoading || loadingData) {
     return <div className="min-h-screen flex items-center justify-center">Loading data...</div>;
   }
 
@@ -133,22 +153,58 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg mb-6 p-4">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">Sales vs Expenses</CardTitle>
-          </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="name" stroke="#888888" />
-                <YAxis stroke="#888888" />
-                <Tooltip cursor={{ fill: 'transparent' }} />
-                <Bar dataKey="value" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">Sales vs Expenses</CardTitle>
+            </CardHeader>
+            <CardContent className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                  <XAxis dataKey="name" stroke="#888888" />
+                  <YAxis stroke="#888888" />
+                  <Tooltip cursor={{ fill: 'transparent' }} />
+                  <Bar dataKey="value" />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">Sales by Category</CardTitle>
+            </CardHeader>
+            <CardContent className="h-64">
+              {salesByCategory.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={salesByCategory}
+                      dataKey="amount"
+                      nameKey="category"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={80}
+                      fill="#8884d8"
+                      label={({ category, percent }) => `${category} (${(percent * 100).toFixed(0)}%)`}
+                    >
+                      {salesByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => `$${Number(value).toFixed(2)}`} />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                  No sales data to display by category.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Button onClick={() => navigate('/add-sale')} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-lg flex items-center justify-center">
