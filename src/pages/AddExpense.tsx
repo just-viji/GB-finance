@@ -94,7 +94,8 @@ const AddExpense = () => {
       item_name: item.item_name,
       unit: item.unit,
       price_per_unit: item.price_per_unit,
-      total: item.total,
+      // Do NOT send 'total' to the database; it's a calculated column.
+      // The database will compute it based on unit and price_per_unit.
       payment_mode: values.payment_mode,
       note: values.note,
     }));
