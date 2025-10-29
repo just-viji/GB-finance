@@ -3,9 +3,10 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Dashboard from "./pages/Dashboard"; // Changed from Index
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import AddSale from "./pages/AddSale"; // Import the new AddSale component
 import { SupabaseSessionProvider } from "./integrations/supabase/supabaseContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -21,7 +22,8 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute />}>
-              <Route index element={<Dashboard />} /> {/* Changed from Index */}
+              <Route index element={<Dashboard />} />
+              <Route path="/add-sale" element={<AddSale />} /> {/* New route for Add Sale */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             </Route>
             <Route path="*" element={<NotFound />} />
