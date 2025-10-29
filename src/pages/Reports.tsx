@@ -245,7 +245,7 @@ const Reports = () => {
             <h3 className="text-lg font-semibold mb-3 flex items-center">
               <Filter className="h-5 w-5 mr-2" /> Filter Reports
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4"> {/* Changed grid classes to make it a single column */}
               <div>
                 <Label htmlFor="searchTerm">Search Item/Category</Label>
                 <Input
