@@ -71,8 +71,15 @@ const AddSale = () => {
       showError("Failed to add sale: " + error.message);
     } else {
       showSuccess("Sale added successfully!");
-      form.reset();
-      navigate('/dashboard');
+      form.reset({ // Reset form fields to default values
+        date: new Date(),
+        item: "",
+        category: "",
+        amount: 0,
+        payment_type: "",
+        note: "",
+      });
+      // Removed navigate('/dashboard');
     }
   };
 

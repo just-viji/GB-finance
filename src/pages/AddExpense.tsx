@@ -27,7 +27,7 @@ const itemSchema = z.object({
     (val) => Number(val),
     z.number().positive("Unit must be a positive number.")
   ),
-  price_per_preprocess: z.preprocess(
+  price_per_unit: z.preprocess( // Corrected from price_per_preprocess
     (val) => Number(val),
     z.number().positive("Price per unit must be a positive number.")
   ),
@@ -154,16 +154,19 @@ const AddExpense = () => {
       }
 
       showSuccess("Expenses added successfully!");
-      form.reset({
+      form.reset({ // Reset form fields to default values
         date: new Date(),
         items: [{ item_name: "", unit: 0, price_per_unit: 0, total: 0 }],
         payment_mode: "",
         bill_image_url: "",
         note: "",
       });
-      setSelectedFile(null);
-      setFilePreviewUrl(null);
-      navigate('/dashboard');
+      setSelectedFile(null); // Clear selected file state
+      setFilePreviewUrl(null); // Clear file preview URL
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''; // Clear the file input element
+      }
+      // Removed navigate('/dashboard');
     } catch (error: any) {
       console.error("Error in onSubmit:", error);
       showError(error.message || "An unexpected error occurred.");
