@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Home, PlusCircle, MinusCircle, TrendingUp, User, LogOut } from 'lucide-react';
+import { Home, TrendingUp, LogOut } from 'lucide-react'; // Removed PlusCircle, MinusCircle, User
 import { showSuccess, showError } from '@/utils/toast';
 import { motion } from 'framer-motion';
 
@@ -24,10 +24,8 @@ const DesktopNavigationBar = () => {
 
   const navLinks = [
     { name: 'Dashboard', path: '/', icon: Home },
-    { name: 'Add Sale', path: '/add-sale', icon: PlusCircle },
-    { name: 'Add Expense', path: '/add-expense', icon: MinusCircle },
+    // Removed 'Add Sale', 'Add Expense', 'Profile'
     { name: 'Reports', path: '/reports', icon: TrendingUp },
-    { name: 'Profile', path: '/profile', icon: User },
   ];
 
   return (
@@ -55,7 +53,7 @@ const DesktopNavigationBar = () => {
           ))}
           {user && (
             <Button
-              type="button" // Added type="button"
+              type="button"
               variant="ghost"
               onClick={handleLogout}
               className="text-gray-100 hover:bg-gray-700 hover:text-destructive transition-colors duration-200"

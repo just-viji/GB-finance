@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Home, PlusCircle, MinusCircle, TrendingUp, User, LogOut } from 'lucide-react';
+import { Home, TrendingUp, LogOut } from 'lucide-react'; // Removed PlusCircle, MinusCircle, User
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -26,10 +26,8 @@ const MobileBottomNavigationBar = () => {
 
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
-    { name: 'Sale', path: '/add-sale', icon: PlusCircle },
-    { name: 'Expense', path: '/add-expense', icon: MinusCircle },
+    // Removed 'Sale', 'Expense', 'Profile'
     { name: 'Reports', path: '/reports', icon: TrendingUp },
-    { name: 'Profile', path: '/profile', icon: User },
   ];
 
   return (
@@ -55,7 +53,7 @@ const MobileBottomNavigationBar = () => {
         ))}
         {user && (
           <button
-            type="button" // Added type="button"
+            type="button"
             onClick={handleLogout}
             className="flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors duration-200 text-gray-300 hover:bg-gray-800 hover:text-destructive"
           >
