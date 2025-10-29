@@ -30,7 +30,7 @@ const DesktopNavigationBar = () => {
   ];
 
   return (
-    <nav className="bg-primary text-primary-foreground p-4 shadow-md hidden md:block"> {/* Hidden on mobile */}
+    <nav className="sticky top-0 z-50 bg-primary text-primary-foreground p-4 shadow-md hidden md:block"> {/* Added sticky, top-0, z-50 */}
       <div className="container mx-auto flex justify-between items-center">
         <Link to="/" className="text-2xl font-bold">GB Finance</Link>
         <div className="flex items-center space-x-4">
