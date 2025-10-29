@@ -12,16 +12,8 @@ const MobileBottomNavigationBar = () => {
   const location = useLocation();
   const { user } = useSupabase();
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error("Error logging out:", error);
-      showError("Failed to log out: " + error.message);
-    } else {
-      showSuccess("Logged out successfully!");
-      navigate('/login');
-    }
-  };
+  // The handleLogout function is no longer needed here as the button is removed.
+  // If you need logout functionality elsewhere, it should be handled there.
 
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
@@ -47,19 +39,7 @@ const MobileBottomNavigationBar = () => {
             {item.name}
           </Link>
         ))}
-        {user && (
-          <Button
-            variant="ghost"
-            onClick={handleLogout}
-            className={cn(
-              "flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors",
-              "text-primary-foreground hover:bg-primary-foreground/10"
-            )}
-          >
-            <LogOut className="h-5 w-5 mb-1" />
-            Logout
-          </Button>
-        )}
+        {/* Logout button removed */}
       </div>
     </nav>
   );
