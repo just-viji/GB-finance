@@ -9,7 +9,7 @@ interface TransactionListItemProps {
   item: string;
   amount: number;
   date: string;
-  category?: string;
+  paymentType?: string;
   paymentMode?: string;
 }
 
@@ -18,7 +18,7 @@ const DashboardTransactionListItem: React.FC<TransactionListItemProps> = ({
   item,
   amount,
   date,
-  category,
+  paymentType,
   paymentMode,
 }) => {
   const formattedDate = isValid(parseISO(date)) ? format(parseISO(date), 'MMM dd, yyyy') : date;
@@ -33,7 +33,7 @@ const DashboardTransactionListItem: React.FC<TransactionListItemProps> = ({
         <div>
           <p className="font-medium text-foreground">{item}</p>
           <p className="text-sm text-muted-foreground">
-            {isSale ? category : paymentMode} &bull; {formattedDate}
+            {isSale ? paymentType : paymentMode} &bull; {formattedDate}
           </p>
         </div>
       </div>

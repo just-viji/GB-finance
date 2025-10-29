@@ -20,8 +20,6 @@ import { showSuccess, showError } from '@/utils/toast';
 
 const formSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
-  item: z.string().min(1, "Item name is required."),
-  category: z.string().min(1, "Category is required."),
   amount: z.preprocess((val) => Number(val), z.number().positive("Amount must be a positive number.")),
   payment_type: z.string().min(1, "Payment type is required."),
   note: z.string().optional(),
@@ -33,7 +31,7 @@ const AddSale = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { date: new Date(), item: "", category: "", amount: 0, payment_type: "", note: "" },
+    defaultValues: { date: new Date(), amount: 0, payment_type: "", note: "" },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -52,7 +50,7 @@ const AddSale = () => {
       showError("Failed to add sale: " + error.message);
     } else {
       showSuccess("Sale added successfully!");
-      form.reset({ date: new Date(), item: "", category: "", amount: 0, payment_type: "", note: "" });
+      form.reset({ date: new Date(), amount: 0, payment_type: "", note: "" });
     }
   };
 
@@ -86,16 +84,6 @@ const AddSale = () => {
               </PopoverContent>
             </Popover>
             {form.formState.errors.date && <p className="text-red-500 text-sm mt-1">{form.formState.errors.date.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="item">Item</Label>
-            <Input id="item" type="text" {...form.register("item")} />
-            {form.formState.errors.item && <p className="text-red-500 text-sm mt-1">{form.formState.errors.item.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Input id="category" type="text" {...form.register("category")} />
-            {form.formState.errors.category && <p className="text-red-500 text-sm mt-1">{form.formState.errors.category.message}</p>}
           </div>
           <div>
             <Label htmlFor="amount">Amount</Label>

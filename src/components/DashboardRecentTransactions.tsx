@@ -10,8 +10,6 @@ import { showError } from '@/utils/toast';
 interface Sale {
   id: string;
   date: string;
-  item: string;
-  category: string;
   amount: number;
   payment_type: string;
 }
@@ -24,7 +22,7 @@ interface Expense {
   payment_mode: string;
 }
 
-type Transaction = (Sale & { type: 'sale' }) | (Expense & { type: 'expense' });
+type Transaction = (Sale & { type: 'sale'; item: string }) | (Expense & { type: 'expense'; item: string; amount: number });
 
 const DashboardRecentTransactions = () => {
   const { user, isLoading } = useSupabase();
@@ -41,7 +39,7 @@ const DashboardRecentTransactions = () => {
 
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
-        .select('id, date, item, category, amount, payment_type')
+        .select('id, date, amount, payment_type')
         .eq('user_id', userId)
         .gte('date', thirtyDaysAgo)
         .order('date', { ascending: false });
@@ -66,7 +64,7 @@ const DashboardRecentTransactions = () => {
       }
 
       const allTransactions: Transaction[] = [
-        ...(salesData || []).map(sale => ({ ...sale, type: 'sale' as const })),
+        ...(salesData || []).map(sale => ({ ...sale, type: 'sale' as const, item: 'Sale' })),
         ...(expensesData || []).map(expense => ({ ...expense, type: 'expense' as const, item: expense.item_name, amount: expense.total })),
       ];
 
@@ -112,7 +110,7 @@ const DashboardRecentTransactions = () => {
                       item={tx.item}
                       amount={tx.amount}
                       date={tx.date}
-                      category={tx.type === 'sale' ? tx.category : undefined}
+                      paymentType={tx.type === 'sale' ? tx.payment_type : undefined}
                     />
                   ))}
                 </div>

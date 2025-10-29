@@ -17,7 +17,7 @@ import { formatCurrencyINR } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
-interface Sale { id: string; date: string; item: string; category: string; amount: number; payment_type: string; note?: string; }
+interface Sale { id: string; date: string; amount: number; payment_type: string; note?: string; }
 interface Expense { id: string; date: string; item_name: string; total: number; payment_mode: string; note?: string; bill_image_url?: string; }
 
 const Reports = () => {
@@ -47,7 +47,7 @@ const Reports = () => {
         expensesQuery = expensesQuery.lte('date', format(dateRange.to, 'yyyy-MM-dd'));
       }
       if (searchTerm) {
-        salesQuery = salesQuery.or(`item.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+        // Search only applies to expenses now
         expensesQuery = expensesQuery.ilike('item_name', `%${searchTerm}%`);
       }
 
@@ -93,7 +93,7 @@ const Reports = () => {
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 border rounded-b-lg mt-[-1px]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input placeholder="Search by item or category..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Input placeholder="Search by expense item..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant={"outline"} className={cn("justify-start text-left font-normal", !dateRange.from && "text-muted-foreground")}>
@@ -113,10 +113,10 @@ const Reports = () => {
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
           </TabsList>
           <TabsContent value="sales">
-            <div className="overflow-x-auto"><Table>{/* Sales Table */}<TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Item</TableHead><TableHead>Category</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{sales.map(s => <TableRow key={s.id}><TableCell>{format(parseISO(s.date), 'PPP')}</TableCell><TableCell>{s.item}</TableCell><TableCell>{s.category}</TableCell><TableCell className="text-right text-green-600">{formatCurrencyINR(s.amount)}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
+            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Payment Type</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{sales.map(s => <TableRow key={s.id}><TableCell>{format(parseISO(s.date), 'PPP')}</TableCell><TableCell>{s.payment_type}</TableCell><TableCell className="text-right text-green-600">{formatCurrencyINR(s.amount)}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
           </TabsContent>
           <TabsContent value="expenses">
-            <div className="overflow-x-auto"><Table>{/* Expenses Table */}<TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Item</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Bill</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{expenses.map(e => <TableRow key={e.id}><TableCell>{format(parseISO(e.date), 'PPP')}</TableCell><TableCell>{e.item_name}</TableCell><TableCell className="text-right text-red-600">{formatCurrencyINR(e.total)}</TableCell><TableCell>{e.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={e.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${e.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('expenses', e.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
+            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Item</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Bill</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{expenses.map(e => <TableRow key={e.id}><TableCell>{format(parseISO(e.date), 'PPP')}</TableCell><TableCell>{e.item_name}</TableCell><TableCell className="text-right text-red-600">{formatCurrencyINR(e.total)}</TableCell><TableCell>{e.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={e.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${e.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('expenses', e.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
           </TabsContent>
         </Tabs>
       </CardContent>
