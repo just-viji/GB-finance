@@ -47,9 +47,9 @@ const Reports = () => {
   // Filter states
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('');
-  const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('');
-  const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('');
+  const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('all'); // Changed from '' to 'all'
+  const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('all'); // Changed from '' to 'all'
+  const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('all'); // Changed from '' to 'all'
 
   const fetchReports = async () => {
     if (!user) return;
@@ -69,10 +69,10 @@ const Reports = () => {
     if (endDate) {
       salesQuery = salesQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
     }
-    if (saleCategoryFilter) {
+    if (saleCategoryFilter && saleCategoryFilter !== 'all') { // Updated condition
       salesQuery = salesQuery.eq('category', saleCategoryFilter);
     }
-    if (salePaymentTypeFilter) {
+    if (salePaymentTypeFilter && salePaymentTypeFilter !== 'all') { // Updated condition
       salesQuery = salesQuery.eq('payment_type', salePaymentTypeFilter);
     }
 
@@ -97,7 +97,7 @@ const Reports = () => {
     if (endDate) {
       expensesQuery = expensesQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
     }
-    if (expensePaymentModeFilter) {
+    if (expensePaymentModeFilter && expensePaymentModeFilter !== 'all') { // Updated condition
       expensesQuery = expensesQuery.eq('payment_mode', expensePaymentModeFilter);
     }
 
@@ -160,9 +160,9 @@ const Reports = () => {
   const handleClearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
-    setSaleCategoryFilter('');
-    setSalePaymentTypeFilter('');
-    setExpensePaymentModeFilter('');
+    setSaleCategoryFilter('all'); // Updated to 'all'
+    setSalePaymentTypeFilter('all'); // Updated to 'all'
+    setExpensePaymentModeFilter('all'); // Updated to 'all'
   };
 
   if (isLoading || loadingData) {
@@ -249,7 +249,7 @@ const Reports = () => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem> {/* Changed value to 'all' */}
                     {uniqueSaleCategories.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -263,7 +263,7 @@ const Reports = () => {
                     <SelectValue placeholder="Select payment type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Payment Types</SelectItem>
+                    <SelectItem value="all">All Payment Types</SelectItem> {/* Changed value to 'all' */}
                     {uniqueSalePaymentTypes.map(type => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
@@ -277,7 +277,7 @@ const Reports = () => {
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Payment Modes</SelectItem>
+                    <SelectItem value="all">All Payment Modes</SelectItem> {/* Changed value to 'all' */}
                     {uniqueExpensePaymentModes.map(mode => (
                       <SelectItem key={mode} value={mode}>{mode}</SelectItem>
                     ))}
