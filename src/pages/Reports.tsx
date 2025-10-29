@@ -6,15 +6,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter } from 'lucide-react';
-import { format, isValid, parseISO } from 'date-fns';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Search } from 'lucide-react';
+import { format, isValid, parseISO, isSameMonth, isSameYear } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { formatCurrencyINR } from '@/lib/currency'; // Import the new currency formatter
+import { Input } from '@/components/ui/input'; // Import Input component
+import { formatCurrencyINR } from '@/lib/currency';
 
 interface Sale {
   id: string;
@@ -43,13 +44,15 @@ const Reports = () => {
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [currentMonthFilteredExpenseTotal, setCurrentMonthFilteredExpenseTotal] = useState<number>(0);
 
   // Filter states
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('all'); // Changed from '' to 'all'
-  const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('all'); // Changed from '' to 'all'
-  const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('all'); // Changed from '' to 'all'
+  const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('all');
+  const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('all');
+  const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>(''); // New state for search term
 
   const fetchReports = async () => {
     if (!user) return;
@@ -69,11 +72,14 @@ const Reports = () => {
     if (endDate) {
       salesQuery = salesQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
     }
-    if (saleCategoryFilter && saleCategoryFilter !== 'all') { // Updated condition
+    if (saleCategoryFilter && saleCategoryFilter !== 'all') {
       salesQuery = salesQuery.eq('category', saleCategoryFilter);
     }
-    if (salePaymentTypeFilter && salePaymentTypeFilter !== 'all') { // Updated condition
+    if (salePaymentTypeFilter && salePaymentTypeFilter !== 'all') {
       salesQuery = salesQuery.eq('payment_type', salePaymentTypeFilter);
+    }
+    if (searchTerm) {
+      salesQuery = salesQuery.or(`item.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
     }
 
     const { data: salesData, error: salesError } = await salesQuery.order('date', { ascending: false });
@@ -97,8 +103,11 @@ const Reports = () => {
     if (endDate) {
       expensesQuery = expensesQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
     }
-    if (expensePaymentModeFilter && expensePaymentModeFilter !== 'all') { // Updated condition
+    if (expensePaymentModeFilter && expensePaymentModeFilter !== 'all') {
       expensesQuery = expensesQuery.eq('payment_mode', expensePaymentModeFilter);
+    }
+    if (searchTerm) {
+      expensesQuery = expensesQuery.ilike('item_name', `%${searchTerm}%`);
     }
 
     const { data: expensesData, error: expensesError } = await expensesQuery.order('date', { ascending: false });
@@ -110,6 +119,19 @@ const Reports = () => {
       setExpenses(expensesData as Expense[]);
     }
 
+    // Calculate current month's filtered expense total
+    const now = new Date();
+    let totalExpensesForCurrentMonth = 0;
+    if (expensesData) {
+      expensesData.forEach(expense => {
+        const expenseDate = parseISO(expense.date);
+        if (isValid(expenseDate) && isSameMonth(expenseDate, now) && isSameYear(expenseDate, now)) {
+          totalExpensesForCurrentMonth += expense.total;
+        }
+      });
+    }
+    setCurrentMonthFilteredExpenseTotal(totalExpensesForCurrentMonth);
+
     setLoadingData(false);
   };
 
@@ -119,7 +141,7 @@ const Reports = () => {
     } else if (!isLoading) {
       setLoadingData(false);
     }
-  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter]); // Re-fetch when filters change
+  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter, searchTerm]); // Re-fetch when filters or search term change
 
   const handleDeleteSale = async (id: string) => {
     if (!confirm("Are you sure you want to delete this sale?")) return;
@@ -160,9 +182,10 @@ const Reports = () => {
   const handleClearFilters = () => {
     setStartDate(undefined);
     setEndDate(undefined);
-    setSaleCategoryFilter('all'); // Updated to 'all'
-    setSalePaymentTypeFilter('all'); // Updated to 'all'
-    setExpensePaymentModeFilter('all'); // Updated to 'all'
+    setSaleCategoryFilter('all');
+    setSalePaymentTypeFilter('all');
+    setExpensePaymentModeFilter('all');
+    setSearchTerm(''); // Clear search term
   };
 
   if (isLoading || loadingData) {
@@ -187,11 +210,40 @@ const Reports = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Current Month's Filtered Expense Total */}
+          <Card className="mb-6 bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-300">
+                Current Month's Filtered Expense Total
+              </CardTitle>
+              <CalendarIcon className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">
+                {formatCurrencyINR(currentMonthFilteredExpenseTotal)}
+              </div>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                Based on current filters and search term.
+              </p>
+            </CardContent>
+          </Card>
+
           <div className="mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
             <h3 className="text-lg font-semibold mb-3 flex items-center">
               <Filter className="h-5 w-5 mr-2" /> Filter Reports
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="searchTerm">Search Item/Category</Label>
+                <Input
+                  id="searchTerm"
+                  type="text"
+                  placeholder="e.g., groceries, rent"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
               <div>
                 <Label htmlFor="startDate">Start Date</Label>
                 <Popover>
@@ -249,7 +301,7 @@ const Reports = () => {
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem> {/* Changed value to 'all' */}
+                    <SelectItem value="all">All Categories</SelectItem>
                     {uniqueSaleCategories.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -263,7 +315,7 @@ const Reports = () => {
                     <SelectValue placeholder="Select payment type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Payment Types</SelectItem> {/* Changed value to 'all' */}
+                    <SelectItem value="all">All Payment Types</SelectItem>
                     {uniqueSalePaymentTypes.map(type => (
                       <SelectItem key={type} value={type}>{type}</SelectItem>
                     ))}
@@ -277,7 +329,7 @@ const Reports = () => {
                     <SelectValue placeholder="Select payment mode" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Payment Modes</SelectItem> {/* Changed value to 'all' */}
+                    <SelectItem value="all">All Payment Modes</SelectItem>
                     {uniqueExpensePaymentModes.map(mode => (
                       <SelectItem key={mode} value={mode}>{mode}</SelectItem>
                     ))}
