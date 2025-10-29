@@ -6,7 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Minus, TrendingUp } from "lucide-react";
-import DashboardHeader from "@/components/DashboardHeader"; // Import the new DashboardHeader
+import DashboardHeader from "@/components/DashboardHeader";
+import DashboardRecentTransactions from "@/components/DashboardRecentTransactions"; // Import the new component
 
 interface FinancialSummary {
   totalSales: number;
@@ -75,7 +76,7 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col bg-gray-100 dark:bg-gray-900 p-4">
       <div className="flex-grow container mx-auto max-w-4xl">
-        <DashboardHeader /> {/* Use the new DashboardHeader component */}
+        <DashboardHeader />
 
         {/* Profit Card */}
         <div className="grid grid-cols-1 gap-4 mb-6">
@@ -118,12 +119,8 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* View All Transactions Button */}
-        <div className="flex justify-center mt-6">
-          <Button onClick={() => navigate('/reports')} className="w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 mr-2" /> View All Transactions
-          </Button>
-        </div>
+        {/* Recent Transactions List */}
+        <DashboardRecentTransactions />
       </div>
       <MadeWithDyad />
     </div>
