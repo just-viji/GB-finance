@@ -223,9 +223,9 @@ const Reports = () => {
                               <TableCell>{expense.payment_mode}</TableCell>
                               <TableCell className="max-w-[150px] truncate">{expense.note || '-'}</TableCell>
                               <TableCell className="flex justify-center space-x-2">
-                                {/* <Button variant="outline" size="icon" onClick={() => navigate(`/edit-expense/${expense.id}`)}>
+                                <Button variant="outline" size="icon" onClick={() => navigate(`/edit-expense/${expense.id}`)}>
                                   <Edit className="h-4 w-4" />
-                                </Button> */}
+                                </Button>
                                 <Button variant="destructive" size="icon" onClick={() => handleDeleteExpense(expense.id)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
