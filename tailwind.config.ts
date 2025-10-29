@@ -55,30 +55,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
-        },
-        // Custom dashboard colors
-        'dashboard-green': "hsl(var(--dashboard-green))",
-        'dashboard-light-bg': "hsl(var(--dashboard-light-bg))",
-        'dashboard-blue': "hsl(var(--dashboard-blue))",
-        'dashboard-dark-text': "hsl(var(--dashboard-dark-text))",
-        'neon-green': 'hsl(var(--neon-green))', // Define neon green
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        'dashboard-xl': '1.5rem', // For the main rounded container
-        'dashboard-2xl': '2rem', // For the bottom nav bar
-        'dashboard-3xl': '3rem', // For the main app container
       },
       keyframes: {
         "accordion-down": {
@@ -101,11 +82,6 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-      },
-      boxShadow: {
-        'neon-green-sm': '0 0 5px var(--neon-green)',
-        'neon-green-md': '0 0 10px var(--neon-green)',
-        'neon-green-lg': '0 0 20px var(--neon-green)',
       },
     },
   },

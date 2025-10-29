@@ -1,12 +1,10 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
-import NavigationBar from './NavigationBar'; // Import the new wrapper NavigationBar
-import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile to conditionally apply padding
+import NavigationBar from './NavigationBar';
 
 const ProtectedRoute = () => {
   const { session, isLoading } = useSupabase();
-  const isMobile = useIsMobile();
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading authentication...</div>;
@@ -17,10 +15,12 @@ const ProtectedRoute = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <NavigationBar />
-      <main className={`flex-grow ${isMobile ? 'pb-16' : ''}`}> {/* Add bottom padding on mobile */}
-        <Outlet />
+      <main className="flex-1 md:ml-64 pb-16 md:pb-0"> {/* Add margin for sidebar and padding for mobile nav */}
+        <div className="p-4 md:p-8">
+          <Outlet />
+        </div>
       </main>
     </div>
   );

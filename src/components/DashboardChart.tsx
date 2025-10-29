@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, subDays } from 'date-fns';
 import { showError } from '@/utils/toast';
 import { formatCurrencyINR } from '@/lib/currency';
-import { motion } from 'framer-motion';
 
 interface DailyData {
   date: string;
@@ -25,7 +24,7 @@ const DashboardChart = () => {
 
       setLoadingChart(true);
       const userId = user.id;
-      const sevenDaysAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd'); // Data for the last 7 days
+      const sevenDaysAgo = format(subDays(new Date(), 6), 'yyyy-MM-dd');
 
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
@@ -34,8 +33,7 @@ const DashboardChart = () => {
         .gte('date', sevenDaysAgo);
 
       if (salesError) {
-        console.error("Error fetching sales for chart:", salesError);
-        showError("Failed to fetch sales data for chart: " + salesError.message);
+        showError("Failed to fetch sales data for chart.");
         setLoadingChart(false);
         return;
       }
@@ -47,8 +45,7 @@ const DashboardChart = () => {
         .gte('date', sevenDaysAgo);
 
       if (expensesError) {
-        console.error("Error fetching expenses for chart:", expensesError);
-        showError("Failed to fetch expenses data for chart: " + expensesError.message);
+        showError("Failed to fetch expenses data for chart.");
         setLoadingChart(false);
         return;
       }
@@ -92,57 +89,38 @@ const DashboardChart = () => {
     }
   }, [user, isLoading]);
 
-  if (loadingChart) {
-    return (
-      <Card className="w-full mb-6 bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Daily Sales vs. Expenses</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-gray-400">Loading chart data...</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.2 }}
-    >
-      <Card className="w-full mb-6 bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700">
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Daily Sales vs. Expenses (Last 7 Days)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {chartData.length === 0 ? (
-            <p className="text-center text-gray-400">No data available for the last 7 days.</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={chartData} margin={{ top: 20, right: 0, left: 0, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted))" />
-                <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" />
-                <YAxis stroke="hsl(var(--muted-foreground))" tickFormatter={(value) => formatCurrencyINR(value)} />
-                <Tooltip
-                  cursor={{ fill: 'hsl(var(--muted) / 0.2)' }}
-                  contentStyle={{
-                    backgroundColor: 'hsl(var(--card))',
-                    borderColor: 'hsl(var(--border))',
-                    borderRadius: '0.5rem',
-                    color: 'hsl(var(--foreground))'
-                  }}
-                  labelStyle={{ color: 'hsl(var(--primary))' }}
-                  formatter={(value: number) => formatCurrencyINR(value)}
-                />
-                <Bar dataKey="sales" fill="hsl(var(--neon-green))" name="Sales" />
-                <Bar dataKey="expenses" fill="hsl(var(--destructive))" name="Expenses" />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Daily Sales vs. Expenses (Last 7 Days)</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {loadingChart ? (
+          <p className="text-center text-muted-foreground">Loading chart data...</p>
+        ) : chartData.length === 0 ? (
+          <p className="text-center text-muted-foreground">No data available for the last 7 days.</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={chartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickFormatter={(value) => formatCurrencyINR(value)} />
+              <Tooltip
+                cursor={{ fill: 'hsl(var(--muted) / 0.5)' }}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  borderColor: 'hsl(var(--border))',
+                }}
+                formatter={(value: number) => formatCurrencyINR(value)}
+              />
+              <Legend />
+              <Bar dataKey="sales" fill="#22c55e" name="Sales" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="expenses" fill="#ef4444" name="Expenses" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

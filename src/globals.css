@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* White */
+    --background: 220 20% 96%; /* Light Gray */
     --foreground: 222.2 84% 4.9%; /* Near Black */
 
     --card: 0 0% 100%; /* White */
@@ -15,7 +15,7 @@
     --popover: 0 0% 100%; /* White */
     --popover-foreground: 222.2 84% 4.9%; /* Near Black */
 
-    --primary: 142.1 76.2% 36.3%; /* Vibrant Green */
+    --primary: 221.2 83.2% 53.3%; /* Vyapar Blue */
     --primary-foreground: 210 40% 98%; /* Off-white */
 
     --secondary: 210 40% 96.1%; /* Light Gray */
@@ -32,55 +32,9 @@
 
     --border: 214.3 31.8% 91.4%; /* Light Gray */
     --input: 214.3 31.8% 91.4%; /* Light Gray */
-    --ring: 142.1 76.2% 36.3%; /* Primary Green */
+    --ring: 221.2 83.2% 53.3%; /* Primary Blue */
 
     --radius: 0.5rem;
-
-    /* Custom Dashboard Colors from image */
-    --dashboard-green: 165 100% 40%; /* Vibrant Green */
-    --dashboard-light-bg: 150 40% 95%; /* Light background */
-    --dashboard-blue: 205 100% 50%; /* Blue for numbers */
-    --dashboard-dark-text: 222.2 84% 4.9%; /* Near Black for text */
-
-    --neon-green: 142.1 76.2% 46.3%; /* Slightly brighter green for neon effect */
-  }
-
-  .dark {
-    --background: 240 10% 3.9%; /* Dark Black */
-    --foreground: 210 40% 98%; /* Off-white */
-
-    --card: 240 10% 3.9%; /* Dark Black */
-    --card-foreground: 210 40% 98%; /* Off-white */
-
-    --popover: 240 10% 3.9%; /* Dark Black */
-    --popover-foreground: 210 40% 98%; /* Off-white */
-
-    --primary: 142.1 76.2% 36.3%; /* Vibrant Green */
-    --primary-foreground: 222.2 47.4% 11.2%; /* Dark Gray */
-
-    --secondary: 217.2 32.6% 17.5%; /* Darker Gray */
-    --secondary-foreground: 210 40% 98%; /* Off-white */
-
-    --muted: 217.2 32.6% 17.5%; /* Darker Gray */
-    --muted-foreground: 215 20.2% 65.1%; /* Medium Gray */
-
-    --accent: 217.2 32.6% 17.5%; /* Darker Gray */
-    --accent-foreground: 210 40% 98%; /* Off-white */
-
-    --destructive: 0 62.8% 30.6%; /* Dark Red */
-    --destructive-foreground: 210 40% 98%; /* Off-white */
-
-    --border: 217.2 32.6% 17.5%; /* Darker Gray */
-    --input: 217.2 32.6% 17.5%; /* Darker Gray */
-    --ring: 142.1 76.2% 36.3%; /* Primary Green */
-
-    /* Custom Dashboard Colors for Dark Mode (adjust as needed) */
-    --dashboard-green: 165 100% 30%; /* Slightly darker green for dark mode */
-    --dashboard-light-bg: 217.2 32.6% 17.5%; /* Darker background for dark mode */
-    --dashboard-blue: 205 100% 60%; /* Slightly lighter blue for dark mode */
-    --dashboard-dark-text: 210 40% 98%; /* Off-white for text in dark mode */
-
-    --neon-green: 142.1 76.2% 46.3%; /* Slightly brighter green for neon effect */
   }
 }
 
@@ -90,6 +44,6 @@
   }
 
   body {
-    @apply bg-background text-foreground font-poppins; /* Apply Poppins font globally */
+    @apply bg-background text-foreground font-poppins;
   }
 }

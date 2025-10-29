@@ -9,8 +9,8 @@ interface TransactionListItemProps {
   item: string;
   amount: number;
   date: string;
-  category?: string; // For sales
-  paymentMode?: string; // For expenses
+  category?: string;
+  paymentMode?: string;
 }
 
 const DashboardTransactionListItem: React.FC<TransactionListItemProps> = ({
@@ -23,22 +23,22 @@ const DashboardTransactionListItem: React.FC<TransactionListItemProps> = ({
 }) => {
   const formattedDate = isValid(parseISO(date)) ? format(parseISO(date), 'MMM dd, yyyy') : date;
   const isSale = type === 'sale';
-  const icon = isSale ? <ArrowUpCircle className="h-5 w-5 text-neon-green" /> : <ArrowDownCircle className="h-5 w-5 text-destructive" />;
-  const amountColor = isSale ? 'text-neon-green' : 'text-destructive';
+  const icon = isSale ? <ArrowUpCircle className="h-5 w-5 text-green-500" /> : <ArrowDownCircle className="h-5 w-5 text-red-500" />;
+  const amountColor = isSale ? 'text-green-600' : 'text-red-600';
 
   return (
-    <div className="flex items-center justify-between py-3 border-b last:border-b-0 border-gray-700">
+    <div className="flex items-center justify-between py-3 border-b last:border-b-0">
       <div className="flex items-center space-x-3">
         {icon}
         <div>
-          <p className="font-medium text-gray-100">{item}</p>
-          <p className="text-sm text-gray-400">
+          <p className="font-medium text-foreground">{item}</p>
+          <p className="text-sm text-muted-foreground">
             {isSale ? category : paymentMode} &bull; {formattedDate}
           </p>
         </div>
       </div>
       <p className={cn("font-semibold", amountColor)}>
-        {isSale ? '+' : ''}{formatCurrencyINR(amount)}
+        {isSale ? '+' : '-'}{formatCurrencyINR(amount)}
       </p>
     </div>
   );
