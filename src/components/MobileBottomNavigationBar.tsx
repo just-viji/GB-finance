@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Home, TrendingUp, LogOut } from 'lucide-react'; // Removed PlusCircle, MinusCircle, User
+import { Home, TrendingUp, LogOut, User } from 'lucide-react'; // Added User icon
 import { showSuccess, showError } from '@/utils/toast';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -26,8 +26,9 @@ const MobileBottomNavigationBar = () => {
 
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
-    // Removed 'Sale', 'Expense', 'Profile'
     { name: 'Reports', path: '/reports', icon: TrendingUp },
+    { name: 'Profile', path: '/profile', icon: User }, // Added Profile to mobile nav
+    { name: 'Logout', action: handleLogout, icon: LogOut, isLogout: true }, // Added Logout to mobile nav
   ];
 
   return (
@@ -39,28 +40,30 @@ const MobileBottomNavigationBar = () => {
     >
       <div className="flex justify-around items-center h-16">
         {navItems.map((item) => (
-          <Link
-            key={item.name}
-            to={item.path}
-            className={cn(
-              "flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors duration-200",
-              location.pathname === item.path ? "text-neon-green bg-gray-800" : "text-gray-300 hover:bg-gray-800 hover:text-neon-green"
-            )}
-          >
-            <item.icon className="h-5 w-5 mb-1" />
-            {item.name}
-          </Link>
+          item.isLogout ? (
+            <button
+              key={item.name}
+              type="button"
+              onClick={item.action}
+              className="flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors duration-200 text-gray-300 hover:bg-gray-800 hover:text-destructive"
+            >
+              <item.icon className="h-5 w-5 mb-1" />
+              {item.name}
+            </button>
+          ) : (
+            <Link
+              key={item.name}
+              to={item.path}
+              className={cn(
+                "flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors duration-200",
+                location.pathname === item.path ? "text-neon-green bg-gray-800" : "text-gray-300 hover:bg-gray-800 hover:text-neon-green"
+              )}
+            >
+              <item.icon className="h-5 w-5 mb-1" />
+              {item.name}
+            </Link>
+          )
         ))}
-        {user && (
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors duration-200 text-gray-300 hover:bg-gray-800 hover:text-destructive"
-          >
-            <LogOut className="h-5 w-5 mb-1" />
-            Logout
-          </button>
-        )}
       </div>
     </motion.nav>
   );
