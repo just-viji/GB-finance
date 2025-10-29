@@ -62,11 +62,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom dashboard colors
+        'dashboard-green': "hsl(var(--dashboard-green))",
+        'dashboard-light-bg': "hsl(var(--dashboard-light-bg))",
+        'dashboard-blue': "hsl(var(--dashboard-blue))",
+        'dashboard-dark-text': "hsl(var(--dashboard-dark-text))",
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        'dashboard-xl': '1.5rem', // For the main rounded container
+        'dashboard-2xl': '2rem', // For the bottom nav bar
+        'dashboard-3xl': '3rem', // For the main app container
       },
       keyframes: {
         "accordion-down": {

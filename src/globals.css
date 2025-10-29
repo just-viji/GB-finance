@@ -33,6 +33,12 @@
     --ring: 142.1 76.2% 36.3%; /* Primary Green */
 
     --radius: 0.5rem;
+
+    /* Custom Dashboard Colors from image */
+    --dashboard-green: 165 100% 40%; /* Vibrant Green */
+    --dashboard-light-bg: 150 40% 95%; /* Light background */
+    --dashboard-blue: 205 100% 50%; /* Blue for numbers */
+    --dashboard-dark-text: 222.2 84% 4.9%; /* Near Black for text */
   }
 
   .dark {
@@ -63,6 +69,12 @@
     --border: 217.2 32.6% 17.5%; /* Darker Gray */
     --input: 217.2 32.6% 17.5%; /* Darker Gray */
     --ring: 142.1 76.2% 36.3%; /* Primary Green */
+
+    /* Custom Dashboard Colors for Dark Mode (adjust as needed) */
+    --dashboard-green: 165 100% 30%; /* Slightly darker green for dark mode */
+    --dashboard-light-bg: 217.2 32.6% 17.5%; /* Darker background for dark mode */
+    --dashboard-blue: 205 100% 60%; /* Slightly lighter blue for dark mode */
+    --dashboard-dark-text: 210 40% 98%; /* Off-white for text in dark mode */
   }
 }
 
