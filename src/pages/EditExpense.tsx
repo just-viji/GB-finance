@@ -162,7 +162,6 @@ const EditExpense = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          {/* Form fields are similar to AddExpense, just pre-filled */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Date</Label>
@@ -204,7 +203,14 @@ const EditExpense = () => {
             ))}
             <Button type="button" variant="outline" onClick={() => append({ item_name: "", unit: 1, price_per_unit: 0, total: 0 })} className="w-full"><PlusCircle className="h-4 w-4 mr-2" /> Add Item</Button>
           </div>
+
+          <div className="p-4 bg-muted rounded-lg flex justify-between items-center">
+            <span className="text-lg font-bold">Grand Total</span>
+            <span className="text-2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
+          </div>
+
           <Separator />
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Bill Image</Label>
@@ -218,11 +224,8 @@ const EditExpense = () => {
             </div>
             <div><Label>Note (Optional)</Label><Textarea {...form.register("note")} /></div>
           </div>
-          <div className="mt-6 p-4 bg-muted rounded-lg flex justify-between items-center">
-            <span className="text-lg font-bold">Grand Total</span>
-            <span className="text-2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
-          </div>
-          <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90 mt-4">Update Expense</Button>
+          
+          <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">Update Expense</Button>
         </form>
       </CardContent>
     </Card>

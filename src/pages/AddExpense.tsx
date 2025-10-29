@@ -202,6 +202,11 @@ const AddExpense = () => {
             {form.formState.errors.items && <p className="text-red-500 text-sm mt-1">{form.formState.errors.items.message}</p>}
           </div>
 
+          <div className="p-4 bg-muted rounded-lg flex justify-between items-center">
+            <span className="text-lg font-bold">Grand Total</span>
+            <span className="text-2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
+          </div>
+
           <Separator />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -216,12 +221,7 @@ const AddExpense = () => {
             </div>
           </div>
 
-          <div className="mt-6 p-4 bg-muted rounded-lg flex justify-between items-center">
-            <span className="text-lg font-bold">Grand Total</span>
-            <span className="text-2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
-          </div>
-
-          <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90 mt-4">Add Expense</Button>
+          <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">Add Expense</Button>
         </form>
       </CardContent>
     </Card>
