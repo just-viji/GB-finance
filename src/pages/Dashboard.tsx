@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
-import { Plus, Minus, TrendingUp, LogOut, User } from "lucide-react";
+import { Plus, Minus, TrendingUp } from "lucide-react"; // Removed LogOut, User icons
 
 interface FinancialSummary {
   totalSales: number;
@@ -19,7 +19,7 @@ interface SalesByCategory {
   amount: number;
 }
 
-const COLORS = ['#0C9C59', '#FFBB28', '#FF8042', '#0088FE', '#00C49F', '#AF19FF', '#FF0000']; // Colors for pie chart segments
+const COLORS = ['hsl(var(--primary))', '#FFBB28', '#FF8042', '#0088FE', '#00C49F', '#AF19FF', '#FF0000']; // Colors for pie chart segments
 
 const Dashboard = () => {
   const { user, isLoading } = useSupabase();
@@ -88,43 +88,30 @@ const Dashboard = () => {
     }
   }, [user, isLoading]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
-  };
-
   if (isLoading || loadingData) {
     return <div className="min-h-screen flex items-center justify-center">Loading data...</div>;
   }
 
   const chartData = [
-    { name: 'Sales', value: summary?.totalSales || 0, fill: '#0C9C59' },
-    { name: 'Expenses', value: summary?.totalExpenses || 0, fill: '#EF4444' },
+    { name: 'Sales', value: summary?.totalSales || 0, fill: 'hsl(var(--primary))' },
+    { name: 'Expenses', value: summary?.totalExpenses || 0, fill: 'hsl(var(--destructive))' },
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="flex flex-col bg-gray-100 dark:bg-gray-900 p-4">
       <div className="flex-grow container mx-auto max-w-4xl">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-green-700 dark:text-green-400">GB Finance Dashboard</h1>
-          <div className="flex space-x-2">
-            <Button onClick={() => navigate('/profile')} variant="outline" size="sm">
-              <User className="h-4 w-4 mr-2" /> Profile
-            </Button>
-            <Button onClick={handleLogout} variant="destructive" size="sm">
-              <LogOut className="h-4 w-4 mr-2" /> Logout
-            </Button>
-          </div>
+          <h1 className="text-3xl font-bold text-primary">GB Finance Dashboard</h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Sales</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
+              <TrendingUp className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+              <div className="text-2xl font-bold text-primary">
                 ${summary?.totalSales.toFixed(2) || '0.00'}
               </div>
             </CardContent>
@@ -132,10 +119,10 @@ const Dashboard = () => {
           <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Expenses</CardTitle>
-              <Minus className="h-4 w-4 text-red-500" />
+              <Minus className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              <div className="text-2xl font-bold text-destructive">
                 ${summary?.totalExpenses.toFixed(2) || '0.00'}
               </div>
             </CardContent>
@@ -146,7 +133,7 @@ const Dashboard = () => {
               <Plus className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className={`text-2xl font-bold ${summary && summary.profit >= 0 ? 'text-blue-700 dark:text-blue-400' : 'text-red-700 dark:text-red-400'}`}>
+              <div className={`text-2xl font-bold ${summary && summary.profit >= 0 ? 'text-primary' : 'text-destructive'}`}>
                 ${summary?.profit.toFixed(2) || '0.00'}
               </div>
             </CardContent>
@@ -156,14 +143,14 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">Sales vs Expenses</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">Sales vs Expenses</CardTitle>
             </CardHeader>
             <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                  <XAxis dataKey="name" stroke="#888888" />
-                  <YAxis stroke="#888888" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" stroke="hsl(var(--foreground))" />
+                  <YAxis stroke="hsl(var(--foreground))" />
                   <Tooltip cursor={{ fill: 'transparent' }} />
                   <Bar dataKey="value" />
                 </BarChart>
@@ -173,7 +160,7 @@ const Dashboard = () => {
 
           <Card className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-4">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-100">Sales by Category</CardTitle>
+              <CardTitle className="text-lg font-semibold text-foreground">Sales by Category</CardTitle>
             </CardHeader>
             <CardContent className="h-64">
               {salesByCategory.length > 0 ? (
@@ -186,7 +173,7 @@ const Dashboard = () => {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      fill="#8884d8"
+                      fill="hsl(var(--primary))"
                       label={({ category, percent }) => `${category} (${(percent * 100).toFixed(0)}%)`}
                     >
                       {salesByCategory.map((entry, index) => (
@@ -198,7 +185,7 @@ const Dashboard = () => {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-center h-full text-muted-foreground">
                   No sales data to display by category.
                 </div>
               )}
@@ -207,7 +194,7 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Button onClick={() => navigate('/add-sale')} className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-lg flex items-center justify-center">
+          <Button onClick={() => navigate('/add-sale')} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-lg text-lg flex items-center justify-center">
             <Plus className="h-5 w-5 mr-2" /> Add Sale
           </Button>
           <Button onClick={() => navigate('/add-expense')} className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-lg text-lg flex items-center justify-center">

@@ -12,7 +12,7 @@ const Login = () => {
 
   useEffect(() => {
     if (!isLoading && session) {
-      navigate('/dashboard');
+      navigate('/'); // Redirect to dashboard after login
     }
   }, [session, isLoading, navigate]);
 
@@ -21,10 +21,10 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold text-green-700 dark:text-green-400">GB Finance Login</CardTitle>
+          <CardTitle className="text-center text-2xl font-bold text-primary">GB Finance Login</CardTitle>
         </CardHeader>
         <CardContent>
           <Auth
@@ -35,14 +35,14 @@ const Login = () => {
               variables: {
                 default: {
                   colors: {
-                    brand: '#0C9C59', // Green theme
-                    brandAccent: '#0A804A',
+                    brand: 'hsl(var(--primary))', // Use the new primary green
+                    brandAccent: 'hsl(var(--primary) / 0.8)', // Slightly darker green for accent
                   },
                 },
               },
             }}
-            theme="light"
-            redirectTo={window.location.origin + '/dashboard'}
+            theme="light" // Keep light theme for auth UI for consistency
+            redirectTo={window.location.origin + '/'} // Redirect to root (dashboard)
           />
         </CardContent>
       </Card>
