@@ -57,7 +57,7 @@ const Profile = () => {
     const toastId = showLoading("Updating profile...");
 
     try {
-      let newAvatarUrl = values.avatar_url;
+      let avatarUrl = values.avatar_url;
 
       if (selectedFile) {
         const fileExt = selectedFile.name.split('.').pop();
@@ -67,26 +67,40 @@ const Profile = () => {
           .from('avatars')
           .upload(filePath, selectedFile, { upsert: true });
 
-        if (uploadError) throw new Error(`Failed to upload avatar: ${uploadError.message}`);
+        if (uploadError) {
+          throw new Error(`Failed to upload avatar: ${uploadError.message}`);
+        }
 
         const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-        newAvatarUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`; // Cache-busting
+        avatarUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`;
       }
 
-      const { error: updateError } = await supabase.from('profiles').update({
-        ...values,
-        avatar_url: newAvatarUrl,
+      const updates = {
+        first_name: values.first_name,
+        last_name: values.last_name,
+        avatar_url: avatarUrl,
         updated_at: new Date().toISOString(),
-      }).eq('id', user.id);
+      };
 
-      if (updateError) throw new Error(`Failed to update profile: ${updateError.message}`);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (updateError) {
+        throw new Error(`Failed to update profile: ${updateError.message}`);
+      }
 
       dismissToast(toastId);
       showSuccess("Profile updated successfully!");
+      
       setSelectedFile(null);
       setPreviewUrl(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-      form.setValue('avatar_url', newAvatarUrl);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      
+      form.setValue('avatar_url', avatarUrl, { shouldDirty: true });
 
     } catch (error: any) {
       dismissToast(toastId);
