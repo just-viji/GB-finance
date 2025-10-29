@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react';
-import { format, isValid, parseISO } from 'date-fns';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, ChevronDown, ChevronRight } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -18,13 +18,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 interface Sale { id: string; date: string; amount: number; payment_type: string; note?: string; }
-interface Expense { id: string; date: string; item_name: string; total: number; payment_mode: string; note?: string; bill_image_url?: string; }
+interface ExpenseItem { id: string; transaction_id: string; item_name: string; total: number; unit: number; price_per_unit: number; }
+interface ExpenseTransaction { id: string; date: string; grand_total: number; payment_mode: string; note?: string; bill_image_url?: string; items: ExpenseItem[]; }
 
 const Reports = () => {
   const navigate = useNavigate();
   const { user } = useSupabase();
   const [sales, setSales] = useState<Sale[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [expenses, setExpenses] = useState<ExpenseTransaction[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
@@ -36,42 +37,64 @@ const Reports = () => {
       setLoadingData(true);
 
       let salesQuery = supabase.from('sales').select('*').eq('user_id', user.id);
-      let expensesQuery = supabase.from('expenses').select('*').eq('user_id', user.id);
+      let expensesQuery = supabase.from('expense_transactions').select('*').eq('user_id', user.id);
 
       if (dateRange.from) {
-        salesQuery = salesQuery.gte('date', format(dateRange.from, 'yyyy-MM-dd'));
-        expensesQuery = expensesQuery.gte('date', format(dateRange.from, 'yyyy-MM-dd'));
+        const fromDate = format(dateRange.from, 'yyyy-MM-dd');
+        salesQuery = salesQuery.gte('date', fromDate);
+        expensesQuery = expensesQuery.gte('date', fromDate);
       }
       if (dateRange.to) {
-        salesQuery = salesQuery.lte('date', format(dateRange.to, 'yyyy-MM-dd'));
-        expensesQuery = expensesQuery.lte('date', format(dateRange.to, 'yyyy-MM-dd'));
-      }
-      if (searchTerm) {
-        // Search only applies to expenses now
-        expensesQuery = expensesQuery.ilike('item_name', `%${searchTerm}%`);
+        const toDate = format(dateRange.to, 'yyyy-MM-dd');
+        salesQuery = salesQuery.lte('date', toDate);
+        expensesQuery = expensesQuery.lte('date', toDate);
       }
 
-      const [{ data: salesData }, { data: expensesData }] = await Promise.all([
+      const [{ data: salesData }, { data: transactionsData }] = await Promise.all([
         salesQuery.order('date', { ascending: false }),
         expensesQuery.order('date', { ascending: false })
       ]);
 
       setSales(salesData || []);
-      setExpenses(expensesData || []);
+
+      if (transactionsData && transactionsData.length > 0) {
+        const transactionIds = transactionsData.map(t => t.id);
+        let itemsQuery = supabase.from('expense_items').select('*').in('transaction_id', transactionIds);
+        if (searchTerm) {
+          itemsQuery = itemsQuery.ilike('item_name', `%${searchTerm}%`);
+        }
+        const { data: itemsData } = await itemsQuery;
+        
+        const itemsByTransactionId = (itemsData || []).reduce((acc, item) => {
+          acc[item.transaction_id] = acc[item.transaction_id] || [];
+          acc[item.transaction_id].push(item);
+          return acc;
+        }, {} as Record<string, ExpenseItem[]>);
+
+        const combinedExpenses = transactionsData.map(t => ({
+          ...t,
+          items: itemsByTransactionId[t.id] || []
+        })).filter(t => !searchTerm || t.items.length > 0);
+        
+        setExpenses(combinedExpenses);
+      } else {
+        setExpenses([]);
+      }
+
       setLoadingData(false);
     };
     if (user) fetchReports();
   }, [user, dateRange, searchTerm]);
 
-  const handleDelete = async (table: 'sales' | 'expenses', id: string) => {
+  const handleDelete = async (table: 'sales' | 'expense_transactions', id: string) => {
     if (!confirm("Are you sure?")) return;
     const { error } = await supabase.from(table).delete().eq('id', id);
     if (error) {
-      showError(`Failed to delete ${table.slice(0, -1)}.`);
+      showError(`Failed to delete entry.`);
     } else {
-      showSuccess(`${table.slice(0, -1)} deleted.`);
-      setSales(prev => table === 'sales' ? prev.filter(s => s.id !== id) : prev);
-      setExpenses(prev => table === 'expenses' ? prev.filter(e => e.id !== id) : prev);
+      showSuccess(`Entry deleted.`);
+      if (table === 'sales') setSales(prev => prev.filter(s => s.id !== id));
+      if (table === 'expense_transactions') setExpenses(prev => prev.filter(e => e.id !== id));
     }
   };
 
@@ -116,11 +139,44 @@ const Reports = () => {
             <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Payment Type</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{sales.map(s => <TableRow key={s.id}><TableCell>{format(parseISO(s.date), 'PPP')}</TableCell><TableCell>{s.payment_type}</TableCell><TableCell className="text-right text-green-600">{formatCurrencyINR(s.amount)}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
           </TabsContent>
           <TabsContent value="expenses">
-            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Item</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Bill</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{expenses.map(e => <TableRow key={e.id}><TableCell>{format(parseISO(e.date), 'PPP')}</TableCell><TableCell>{e.item_name}</TableCell><TableCell className="text-right text-red-600">{formatCurrencyINR(e.total)}</TableCell><TableCell>{e.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={e.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${e.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('expenses', e.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
+            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead className="w-24"></TableHead><TableHead>Date</TableHead><TableHead>Items</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Bill</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{expenses.map(e => <ExpenseRow key={e.id} expense={e} onDelete={() => handleDelete('expense_transactions', e.id)} />)}</TableBody></Table></div>
           </TabsContent>
         </Tabs>
       </CardContent>
     </Card>
+  );
+};
+
+const ExpenseRow = ({ expense, onDelete }: { expense: ExpenseTransaction; onDelete: () => void }) => {
+  const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+      <TableRow>
+        <TableCell>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="icon">{isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</Button>
+          </CollapsibleTrigger>
+        </TableCell>
+        <TableCell>{format(parseISO(expense.date), 'PPP')}</TableCell>
+        <TableCell>{expense.items.length} item(s)</TableCell>
+        <TableCell className="text-right text-red-600">{formatCurrencyINR(expense.grand_total)}</TableCell>
+        <TableCell>{expense.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={expense.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell>
+        <TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${expense.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button></TableCell>
+      </TableRow>
+      <CollapsibleContent asChild>
+        <tr>
+          <td colSpan={6} className="p-0">
+            <div className="p-4 bg-muted/50">
+              <h4 className="font-semibold mb-2">Items:</h4>
+              <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Unit</TableHead><TableHead>Price/Unit</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
+                <TableBody>{expense.items.map(item => <TableRow key={item.id}><TableCell>{item.item_name}</TableCell><TableCell>{item.unit}</TableCell><TableCell>{formatCurrencyINR(item.price_per_unit)}</TableCell><TableCell className="text-right">{formatCurrencyINR(item.total)}</TableCell></TableRow>)}</TableBody>
+              </Table>
+            </div>
+          </td>
+        </tr>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };
 

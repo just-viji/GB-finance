@@ -54,8 +54,8 @@ const Dashboard = () => {
       const totalSales = salesData.reduce((sum, sale) => sum + (sale.amount || 0), 0);
 
       const { data: expensesData, error: expensesError } = await supabase
-        .from('expenses')
-        .select('total')
+        .from('expense_transactions')
+        .select('grand_total')
         .eq('user_id', userId);
 
       if (expensesError) {
@@ -63,7 +63,7 @@ const Dashboard = () => {
         setLoadingData(false);
         return;
       }
-      const totalExpenses = expensesData.reduce((sum, expense) => sum + (expense.total || 0), 0);
+      const totalExpenses = expensesData.reduce((sum, expense) => sum + (expense.grand_total || 0), 0);
 
       setSummary({
         totalSales,

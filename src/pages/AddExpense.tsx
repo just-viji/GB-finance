@@ -18,12 +18,13 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 import { Separator } from '@/components/ui/separator';
+import { formatCurrencyINR } from '@/lib/currency';
 
 const itemSchema = z.object({
   item_name: z.string().min(1, "Item name is required."),
   unit: z.preprocess((val) => Number(val), z.number().positive("Unit must be a positive number.")),
   price_per_unit: z.preprocess((val) => Number(val), z.number().positive("Price per unit must be a positive number.")),
-  total: z.preprocess((val) => Number(val), z.number().positive("Total must be a positive number.")),
+  total: z.preprocess((val) => Number(val), z.number().min(0)),
 });
 
 const formSchema = z.object({
@@ -53,6 +54,8 @@ const AddExpense = () => {
   });
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
+  const watchedItems = form.watch("items");
+  const grandTotal = watchedItems.reduce((sum, item) => sum + (item.total || 0), 0);
 
   useEffect(() => {
     const subscription = form.watch((value, { name }) => {
@@ -83,7 +86,7 @@ const AddExpense = () => {
       return;
     }
 
-    const toastId = showLoading("Adding expenses...");
+    const toastId = showLoading("Adding expense...");
     let finalBillImageUrl = values.bill_image_url;
 
     try {
@@ -95,22 +98,35 @@ const AddExpense = () => {
         finalBillImageUrl = publicUrlData.publicUrl;
       }
 
-      const expensesToInsert = values.items.map(item => ({
+      const calculatedGrandTotal = values.items.reduce((sum, item) => sum + item.total, 0);
+
+      const { data: transactionData, error: transactionError } = await supabase
+        .from('expense_transactions')
+        .insert({
+          user_id: user.id,
+          date: format(values.date, 'yyyy-MM-dd'),
+          payment_mode: values.payment_mode,
+          note: values.note,
+          bill_image_url: finalBillImageUrl || null,
+          grand_total: calculatedGrandTotal,
+        })
+        .select('id')
+        .single();
+
+      if (transactionError) throw new Error(`Failed to create expense transaction: ${transactionError.message}`);
+      
+      const transactionId = transactionData.id;
+
+      const itemsToInsert = values.items.map(item => ({
+        transaction_id: transactionId,
         user_id: user.id,
-        date: format(values.date, 'yyyy-MM-dd'),
-        item_name: item.item_name,
-        unit: item.unit,
-        price_per_unit: item.price_per_unit,
-        total: item.total,
-        payment_mode: values.payment_mode,
-        bill_image_url: finalBillImageUrl || null,
-        note: values.note,
+        ...item,
       }));
 
-      const { error: insertError } = await supabase.from('expenses').insert(expensesToInsert);
-      if (insertError) throw new Error("Failed to add expenses: " + insertError.message);
+      const { error: itemsError } = await supabase.from('expense_items').insert(itemsToInsert);
+      if (itemsError) throw new Error(`Failed to add expense items: ${itemsError.message}`);
 
-      showSuccess("Expenses added successfully!");
+      showSuccess("Expense added successfully!");
       form.reset();
       setSelectedFile(null);
       setFilePreviewUrl(null);
@@ -195,7 +211,12 @@ const AddExpense = () => {
             </div>
           </div>
 
-          <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">Add Expense</Button>
+          <div className="mt-6 p-4 bg-muted rounded-lg flex justify-between items-center">
+            <span className="text-lg font-bold">Grand Total</span>
+            <span className="text-2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
+          </div>
+
+          <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90 mt-4">Add Expense</Button>
         </form>
       </CardContent>
     </Card>

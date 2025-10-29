@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardTransactionListItem from './DashboardTransactionListItem';
-import { parseISO, subDays, isAfter } from 'date-fns';
+import { parseISO, subDays } from 'date-fns';
 import { showError } from '@/utils/toast';
 
 interface Sale {
@@ -14,15 +14,14 @@ interface Sale {
   payment_type: string;
 }
 
-interface Expense {
+interface ExpenseTransaction {
   id: string;
   date: string;
-  item_name: string;
-  total: number;
+  grand_total: number;
   payment_mode: string;
 }
 
-type Transaction = (Sale & { type: 'sale'; item: string }) | (Expense & { type: 'expense'; item: string; amount: number });
+type Transaction = (Sale & { type: 'sale'; item: string }) | (ExpenseTransaction & { type: 'expense'; item: string; amount: number });
 
 const DashboardRecentTransactions = () => {
   const { user, isLoading } = useSupabase();
@@ -51,8 +50,8 @@ const DashboardRecentTransactions = () => {
       }
 
       const { data: expensesData, error: expensesError } = await supabase
-        .from('expenses')
-        .select('id, date, item_name, total, payment_mode')
+        .from('expense_transactions')
+        .select('id, date, grand_total, payment_mode')
         .eq('user_id', userId)
         .gte('date', thirtyDaysAgo)
         .order('date', { ascending: false });
@@ -65,7 +64,7 @@ const DashboardRecentTransactions = () => {
 
       const allTransactions: Transaction[] = [
         ...(salesData || []).map(sale => ({ ...sale, type: 'sale' as const, item: 'Sale' })),
-        ...(expensesData || []).map(expense => ({ ...expense, type: 'expense' as const, item: expense.item_name, amount: expense.total })),
+        ...(expensesData || []).map(expense => ({ ...expense, type: 'expense' as const, item: 'Expense', amount: expense.grand_total })),
       ];
 
       allTransactions.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());

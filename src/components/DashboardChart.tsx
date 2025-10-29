@@ -39,8 +39,8 @@ const DashboardChart = () => {
       }
 
       const { data: expensesData, error: expensesError } = await supabase
-        .from('expenses')
-        .select('date, total')
+        .from('expense_transactions')
+        .select('date, grand_total')
         .eq('user_id', userId)
         .gte('date', sevenDaysAgo);
 
@@ -66,7 +66,7 @@ const DashboardChart = () => {
       expensesData.forEach(expense => {
         const date = expense.date;
         if (dailyMap.has(date)) {
-          dailyMap.get(date)!.expenses += expense.total;
+          dailyMap.get(date)!.expenses += expense.grand_total;
         }
       });
 
