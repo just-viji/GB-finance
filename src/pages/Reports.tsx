@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Search, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Search, Image as ImageIcon, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, isValid, parseISO, isSameMonth, isSameYear } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { motion } from 'framer-motion';
 
 interface Sale {
@@ -48,6 +49,7 @@ const Reports = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [currentMonthFilteredExpenseTotal, setCurrentMonthFilteredExpenseTotal] = useState<number>(0);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(true); // State for collapsible filters
 
   // Filter states
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
@@ -250,123 +252,137 @@ const Reports = () => {
               </CardContent>
             </Card>
 
-            <div className="mb-6 p-4 border rounded-lg bg-gray-700 border-gray-600">
-              <h3 className="text-lg font-semibold mb-3 flex items-center text-gray-100">
-                <Filter className="h-5 w-5 mr-2 text-neon-green" /> Filter Reports
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="searchTerm" className="text-gray-300">Search Item/Category</Label>
-                  <Input
-                    id="searchTerm"
-                    type="text"
-                    placeholder="e.g., groceries, rent"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="mt-1 bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="startDate" className="text-gray-300">Start Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button" // Added type="button"
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-gray-600 text-gray-100 border-gray-500 hover:bg-gray-500",
-                          !startDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-neon-green" />
-                        {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700 text-gray-100">
-                      <Calendar
-                        mode="single"
-                        selected={startDate}
-                        onSelect={setStartDate}
-                        initialFocus
-                        className="text-gray-100"
+            {/* Collapsible Filter Section */}
+            <Card className="mb-6 bg-gray-700 border-gray-600 text-gray-100">
+              <Collapsible
+                open={isFiltersOpen}
+                onOpenChange={setIsFiltersOpen}
+                className="w-full"
+              >
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" className="w-full justify-between text-lg font-semibold text-gray-100 hover:bg-gray-600">
+                    <span className="flex items-center">
+                      <Filter className="h-5 w-5 mr-2 text-neon-green" /> Filter Reports
+                    </span>
+                    {isFiltersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="p-4 border-t border-gray-600">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <Label htmlFor="searchTerm" className="text-gray-300">Search Item/Category</Label>
+                      <Input
+                        id="searchTerm"
+                        type="text"
+                        placeholder="e.g., groceries, rent"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="mt-1 bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green"
                       />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label htmlFor="endDate" className="text-gray-300">End Date</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button" // Added type="button"
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal bg-gray-600 text-gray-100 border-gray-500 hover:bg-gray-500",
-                          !endDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4 text-neon-green" />
-                        {endDate ? format(endDate, "PPP") : <span>Pick an end date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700 text-gray-100">
-                      <Calendar
-                        mode="single"
-                        selected={endDate}
-                        onSelect={setEndDate}
-                        initialFocus
-                        className="text-gray-100"
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div>
-                  <Label htmlFor="saleCategoryFilter" className="text-gray-300">Sale Category</Label>
-                  <Select onValueChange={setSaleCategoryFilter} value={saleCategoryFilter}>
-                    <SelectTrigger className="w-full bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {uniqueSaleCategories.map(category => (
-                        <SelectItem key={category} value={category}>{category}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="salePaymentTypeFilter" className="text-gray-300">Sale Payment Type</Label>
-                  <Select onValueChange={setSalePaymentTypeFilter} value={salePaymentTypeFilter}>
-                    <SelectTrigger className="w-full bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green">
-                      <SelectValue placeholder="Select payment type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
-                      <SelectItem value="all">All Payment Types</SelectItem>
-                      {uniqueSalePaymentTypes.map(type => (
-                        <SelectItem key={type} value={type}>{type}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="expensePaymentModeFilter" className="text-gray-300">Expense Payment Mode</Label>
-                  <Select onValueChange={setExpensePaymentModeFilter} value={expensePaymentModeFilter}>
-                    <SelectTrigger className="w-full bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green">
-                      <SelectValue placeholder="Select payment mode" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
-                      <SelectItem value="all">All Payment Modes</SelectItem>
-                      {uniqueExpensePaymentModes.map(mode => (
-                        <SelectItem key={mode} value={mode}>{mode}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <Button type="button" onClick={handleClearFilters} variant="outline" className="mt-4 w-full bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 hover:text-neon-green shadow-neon-green-sm">
-                Clear Filters
-              </Button>
-            </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="startDate" className="text-gray-300">Start Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal bg-gray-600 text-gray-100 border-gray-500 hover:bg-gray-500",
+                              !startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-neon-green" />
+                            {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700 text-gray-100">
+                          <Calendar
+                            mode="single"
+                            selected={startDate}
+                            onSelect={setStartDate}
+                            initialFocus
+                            className="text-gray-100"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="endDate" className="text-gray-300">End Date</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal bg-gray-600 text-gray-100 border-gray-500 hover:bg-gray-500",
+                              !endDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-neon-green" />
+                            {endDate ? format(endDate, "PPP") : <span>Pick an end date</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700 text-gray-100">
+                          <Calendar
+                            mode="single"
+                            selected={endDate}
+                            onSelect={setEndDate}
+                            initialFocus
+                            className="text-gray-100"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    <div>
+                      <Label htmlFor="saleCategoryFilter" className="text-gray-300">Sale Category</Label>
+                      <Select onValueChange={setSaleCategoryFilter} value={saleCategoryFilter}>
+                        <SelectTrigger className="w-full bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green">
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {uniqueSaleCategories.map(category => (
+                            <SelectItem key={category} value={category}>{category}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="salePaymentTypeFilter" className="text-gray-300">Sale Payment Type</Label>
+                      <Select onValueChange={setSalePaymentTypeFilter} value={salePaymentTypeFilter}>
+                        <SelectTrigger className="w-full bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green">
+                          <SelectValue placeholder="Select payment type" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
+                          <SelectItem value="all">All Payment Types</SelectItem>
+                          {uniqueSalePaymentTypes.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="expensePaymentModeFilter" className="text-gray-300">Expense Payment Mode</Label>
+                      <Select onValueChange={setExpensePaymentModeFilter} value={expensePaymentModeFilter}>
+                        <SelectTrigger className="w-full bg-gray-600 text-gray-100 border-gray-500 focus:border-neon-green">
+                          <SelectValue placeholder="Select payment mode" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
+                          <SelectItem value="all">All Payment Modes</SelectItem>
+                          {uniqueExpensePaymentModes.map(mode => (
+                            <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <Button type="button" onClick={handleClearFilters} variant="outline" className="mt-4 w-full bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 hover:text-neon-green shadow-neon-green-sm">
+                    Clear Filters
+                  </Button>
+                </CollapsibleContent>
+              </Collapsible>
+            </Card>
 
             <Tabs defaultValue="sales" className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-gray-700 text-gray-300">
@@ -386,25 +402,25 @@ const Reports = () => {
                         <Table className="min-w-full">
                           <TableHeader>
                             <TableRow className="bg-gray-700 hover:bg-gray-700">
-                              <TableHead className="text-gray-300">Date</TableHead>
-                              <TableHead className="text-gray-300">Item</TableHead>
-                              <TableHead className="text-gray-300">Category</TableHead>
-                              <TableHead className="text-right text-gray-300">Amount</TableHead>
-                              <TableHead className="text-gray-300">Payment</TableHead>
-                              <TableHead className="text-gray-300">Note</TableHead>
-                              <TableHead className="text-center text-gray-300">Actions</TableHead>
+                              <TableHead className="text-gray-300 w-[120px] text-nowrap">Date</TableHead>
+                              <TableHead className="text-gray-300 w-[150px] text-nowrap">Item</TableHead>
+                              <TableHead className="text-gray-300 w-[120px] text-nowrap">Category</TableHead>
+                              <TableHead className="text-right text-gray-300 w-[100px] text-nowrap">Amount</TableHead>
+                              <TableHead className="text-gray-300 w-[120px] text-nowrap">Payment</TableHead>
+                              <TableHead className="text-gray-300 flex-1 min-w-[150px] text-nowrap">Note</TableHead>
+                              <TableHead className="text-center text-gray-300 w-[100px] text-nowrap">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {sales.map((sale) => (
                               <TableRow key={sale.id} className="border-gray-700 hover:bg-gray-700/50">
-                                <TableCell className="text-gray-200">{isValid(parseISO(sale.date)) ? format(parseISO(sale.date), 'PPP') : sale.date}</TableCell>
-                                <TableCell className="text-gray-200">{sale.item}</TableCell>
-                                <TableCell className="text-gray-200">{sale.category}</TableCell>
-                                <TableCell className="text-right text-neon-green">{formatCurrencyINR(sale.amount)}</TableCell>
-                                <TableCell className="text-gray-200">{sale.payment_type}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{isValid(parseISO(sale.date)) ? format(parseISO(sale.date), 'PPP') : sale.date}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{sale.item}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{sale.category}</TableCell>
+                                <TableCell className="text-right text-neon-green text-nowrap">{formatCurrencyINR(sale.amount)}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{sale.payment_type}</TableCell>
                                 <TableCell className="max-w-[150px] truncate text-gray-200">{sale.note || '-'}</TableCell>
-                                <TableCell className="flex justify-center space-x-2">
+                                <TableCell className="flex justify-center space-x-2 text-nowrap">
                                   <Button type="button" variant="outline" size="icon" onClick={() => navigate(`/edit-sale/${sale.id}`)} className="bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 shadow-neon-green-sm">
                                     <Edit className="h-4 w-4" />
                                   </Button>
@@ -434,27 +450,27 @@ const Reports = () => {
                         <Table className="min-w-full">
                           <TableHeader>
                             <TableRow className="bg-gray-700 hover:bg-gray-700">
-                              <TableHead className="text-gray-300">Date</TableHead>
-                              <TableHead className="text-gray-300">Item</TableHead>
-                              <TableHead className="text-gray-300">Unit</TableHead>
-                              <TableHead className="text-right text-gray-300">Price/Unit</TableHead>
-                              <TableHead className="text-right text-gray-300">Total</TableHead>
-                              <TableHead className="text-gray-300">Payment</TableHead>
-                              <TableHead className="text-gray-300">Bill</TableHead>
-                              <TableHead className="text-gray-300">Note</TableHead>
-                              <TableHead className="text-center text-gray-300">Actions</TableHead>
+                              <TableHead className="text-gray-300 w-[120px] text-nowrap">Date</TableHead>
+                              <TableHead className="text-gray-300 w-[150px] text-nowrap">Item</TableHead>
+                              <TableHead className="text-gray-300 w-[80px] text-nowrap">Unit</TableHead>
+                              <TableHead className="text-right text-gray-300 w-[100px] text-nowrap">Price/Unit</TableHead>
+                              <TableHead className="text-right text-gray-300 w-[100px] text-nowrap">Total</TableHead>
+                              <TableHead className="text-gray-300 w-[120px] text-nowrap">Payment</TableHead>
+                              <TableHead className="text-center text-gray-300 w-[80px] text-nowrap">Bill</TableHead>
+                              <TableHead className="text-gray-300 flex-1 min-w-[150px] text-nowrap">Note</TableHead>
+                              <TableHead className="text-center text-gray-300 w-[100px] text-nowrap">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {expenses.map((expense) => (
                               <TableRow key={expense.id} className="border-gray-700 hover:bg-gray-700/50">
-                                <TableCell className="text-gray-200">{isValid(parseISO(expense.date)) ? format(parseISO(expense.date), 'PPP') : expense.date}</TableCell>
-                                <TableCell className="text-gray-200">{expense.item_name}</TableCell>
-                                <TableCell className="text-gray-200">{expense.unit}</TableCell>
-                                <TableCell className="text-right text-gray-200">{formatCurrencyINR(expense.price_per_unit)}</TableCell>
-                                <TableCell className="text-right text-destructive">{formatCurrencyINR(expense.total)}</TableCell>
-                                <TableCell className="text-gray-200">{expense.payment_mode}</TableCell>
-                                <TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{isValid(parseISO(expense.date)) ? format(parseISO(expense.date), 'PPP') : expense.date}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{expense.item_name}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{expense.unit}</TableCell>
+                                <TableCell className="text-right text-gray-200 text-nowrap">{formatCurrencyINR(expense.price_per_unit)}</TableCell>
+                                <TableCell className="text-right text-destructive text-nowrap">{formatCurrencyINR(expense.total)}</TableCell>
+                                <TableCell className="text-gray-200 text-nowrap">{expense.payment_mode}</TableCell>
+                                <TableCell className="text-center">
                                   {expense.bill_image_url ? (
                                     <Dialog>
                                       <DialogTrigger asChild>
@@ -476,7 +492,7 @@ const Reports = () => {
                                   )}
                                 </TableCell>
                                 <TableCell className="max-w-[150px] truncate text-gray-200">{expense.note || '-'}</TableCell>
-                                <TableCell className="flex justify-center space-x-2">
+                                <TableCell className="flex justify-center space-x-2 text-nowrap">
                                   <Button type="button" variant="outline" size="icon" onClick={() => navigate(`/edit-expense/${expense.id}`)} className="bg-gray-600 text-yellow-400 border-yellow-500 hover:bg-gray-500 shadow-sm">
                                     <Edit className="h-4 w-4" />
                                   </Button>
