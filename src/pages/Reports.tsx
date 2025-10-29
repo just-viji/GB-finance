@@ -52,7 +52,19 @@ const Reports = () => {
   const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('all');
   const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('all');
   const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>(''); // New state for search term
+  const [searchTerm, setSearchTerm] = useState<string>(''); // State for immediate input value
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(''); // State for debounced search
+
+  // Debounce effect for search term
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce delay
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm]);
 
   const fetchReports = async () => {
     if (!user) return;
@@ -78,8 +90,8 @@ const Reports = () => {
     if (salePaymentTypeFilter && salePaymentTypeFilter !== 'all') {
       salesQuery = salesQuery.eq('payment_type', salePaymentTypeFilter);
     }
-    if (searchTerm) {
-      salesQuery = salesQuery.or(`item.ilike.%${searchTerm}%,category.ilike.%${searchTerm}%`);
+    if (debouncedSearchTerm) { // Use debounced search term here
+      salesQuery = salesQuery.or(`item.ilike.%${debouncedSearchTerm}%,category.ilike.%${debouncedSearchTerm}%`);
     }
 
     const { data: salesData, error: salesError } = await salesQuery.order('date', { ascending: false });
@@ -106,8 +118,8 @@ const Reports = () => {
     if (expensePaymentModeFilter && expensePaymentModeFilter !== 'all') {
       expensesQuery = expensesQuery.eq('payment_mode', expensePaymentModeFilter);
     }
-    if (searchTerm) {
-      expensesQuery = expensesQuery.ilike('item_name', `%${searchTerm}%`);
+    if (debouncedSearchTerm) { // Use debounced search term here
+      expensesQuery = expensesQuery.ilike('item_name', `%${debouncedSearchTerm}%`);
     }
 
     const { data: expensesData, error: expensesError } = await expensesQuery.order('date', { ascending: false });
@@ -141,7 +153,7 @@ const Reports = () => {
     } else if (!isLoading) {
       setLoadingData(false);
     }
-  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter, searchTerm]); // Re-fetch when filters or search term change
+  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter, debouncedSearchTerm]); // Re-fetch when filters or DEBOUNCED search term change
 
   const handleDeleteSale = async (id: string) => {
     if (!confirm("Are you sure you want to delete this sale?")) return;
@@ -185,7 +197,8 @@ const Reports = () => {
     setSaleCategoryFilter('all');
     setSalePaymentTypeFilter('all');
     setExpensePaymentModeFilter('all');
-    setSearchTerm(''); // Clear search term
+    setSearchTerm(''); // Clear immediate search term
+    setDebouncedSearchTerm(''); // Clear debounced search term
   };
 
   if (isLoading || loadingData) {
