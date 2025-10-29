@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError } from '@/utils/toast';
 import { Separator } from '@/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 const itemSchema = z.object({
   item_name: z.string().min(1, "Item name is required."),
@@ -122,7 +124,7 @@ const AddExpense = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md mt-8">
+      <Card className="w-full max-w-3xl mt-8"> {/* Increased max-w for table */}
         <CardHeader>
           <div className="flex items-center justify-between">
             <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
@@ -166,82 +168,91 @@ const AddExpense = () => {
             <Separator />
 
             <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Expense Items</h3>
-            {fields.map((field, index) => (
-              <div key={field.id} className="space-y-4 border p-4 rounded-md relative">
-                {fields.length > 1 && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => remove(index)}
-                    className="absolute top-2 right-2 h-7 w-7"
-                  >
-                    <MinusCircle className="h-4 w-4" />
-                  </Button>
-                )}
-                <div>
-                  <Label htmlFor={`items.${index}.item_name`}>Item Name</Label>
-                  <Input
-                    id={`items.${index}.item_name`}
-                    type="text"
-                    {...form.register(`items.${index}.item_name`)}
-                    className="mt-1"
-                  />
-                  {form.formState.errors.items?.[index]?.item_name && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.item_name?.message}</p>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor={`items.${index}.unit`}>Unit</Label>
-                    <Input
-                      id={`items.${index}.unit`}
-                      type="number"
-                      step="0.01"
-                      {...form.register(`items.${index}.unit`)}
-                      className="mt-1"
-                    />
-                    {form.formState.errors.items?.[index]?.unit && (
-                      <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.unit?.message}</p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor={`items.${index}.price_per_unit`}>Price Per Unit</Label>
-                    <Input
-                      id={`items.${index}.price_per_unit`}
-                      type="number"
-                      step="0.01"
-                      {...form.register(`items.${index}.price_per_unit`)}
-                      className="mt-1"
-                    />
-                    {form.formState.errors.items?.[index]?.price_per_unit && (
-                      <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.price_per_unit?.message}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor={`items.${index}.total`}>Total Amount</Label>
-                  <Input
-                    id={`items.${index}.total`}
-                    type="number"
-                    step="0.01"
-                    {...form.register(`items.${index}.total`)}
-                    className="mt-1"
-                    readOnly
-                  />
-                  {form.formState.errors.items?.[index]?.total && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.total?.message}</p>
-                  )}
-                </div>
-              </div>
-            ))}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[200px]">Item Name</TableHead>
+                    <TableHead className="w-[100px]">Unit</TableHead>
+                    <TableHead className="w-[120px]">Price/Unit</TableHead>
+                    <TableHead className="w-[120px]">Total</TableHead>
+                    <TableHead className="w-[60px] text-center">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {fields.map((field, index) => (
+                    <TableRow key={field.id}>
+                      <TableCell>
+                        <Input
+                          id={`items.${index}.item_name`}
+                          type="text"
+                          {...form.register(`items.${index}.item_name`)}
+                          placeholder="e.g., Office Supplies"
+                        />
+                        {form.formState.errors.items?.[index]?.item_name && (
+                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.item_name?.message}</p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          id={`items.${index}.unit`}
+                          type="number"
+                          step="0.01"
+                          {...form.register(`items.${index}.unit`)}
+                          placeholder="1"
+                        />
+                        {form.formState.errors.items?.[index]?.unit && (
+                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.unit?.message}</p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          id={`items.${index}.price_per_unit`}
+                          type="number"
+                          step="0.01"
+                          {...form.register(`items.${index}.price_per_unit`)}
+                          placeholder="10.00"
+                        />
+                        {form.formState.errors.items?.[index]?.price_per_unit && (
+                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.price_per_unit?.message}</p>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          id={`items.${index}.total`}
+                          type="number"
+                          step="0.01"
+                          {...form.register(`items.${index}.total`)}
+                          readOnly
+                          className="bg-gray-100 dark:bg-gray-700"
+                        />
+                        {form.formState.errors.items?.[index]?.total && (
+                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.total?.message}</p>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {fields.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon"
+                            onClick={() => remove(index)}
+                            className="h-7 w-7"
+                          >
+                            <MinusCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
             <Button
               type="button"
               variant="outline"
               onClick={() => append({ item_name: "", unit: 0, price_per_unit: 0, total: 0 })}
-              className="w-full flex items-center justify-center"
+              className="w-full flex items-center justify-center mt-4"
             >
               <PlusCircle className="h-4 w-4 mr-2" /> Add Another Item
             </Button>
