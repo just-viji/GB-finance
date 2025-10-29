@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Minus, TrendingUp } from "lucide-react"; // Keep icons for summary cards and new button
+import { Plus, Minus, TrendingUp } from "lucide-react";
+import DashboardHeader from "@/components/DashboardHeader"; // Import the new DashboardHeader
 
 interface FinancialSummary {
   totalSales: number;
@@ -74,9 +75,7 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col bg-gray-100 dark:bg-gray-900 p-4">
       <div className="flex-grow container mx-auto max-w-4xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-primary">GB Finance Dashboard</h1>
-        </div>
+        <DashboardHeader /> {/* Use the new DashboardHeader component */}
 
         {/* Profit Card */}
         <div className="grid grid-cols-1 gap-4 mb-6">
