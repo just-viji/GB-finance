@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,12 +11,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon, ArrowLeft, Image as ImageIcon } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarIcon, ArrowLeft, Image as ImageIcon, UploadCloud, XCircle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } => '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { showSuccess, showError } from '@/utils/toast';
+import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 
 const formSchema = z.object({
   date: z.date({
@@ -36,7 +36,7 @@ const formSchema = z.object({
     z.number().positive("Total amount must be a positive number.")
   ),
   payment_mode: z.string().min(1, "Payment mode is required."),
-  bill_image_url: z.string().url("Must be a valid URL").optional().or(z.literal('')), // New field for image URL
+  bill_image_url: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   note: z.string().optional(),
 });
 
@@ -44,6 +44,11 @@ const EditExpense = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user, isLoading } = useSupabase();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,7 +59,7 @@ const EditExpense = () => {
       price_per_unit: 0,
       total: 0,
       payment_mode: "",
-      bill_image_url: "", // Default empty string
+      bill_image_url: "",
       note: "",
     },
   });
@@ -73,7 +78,7 @@ const EditExpense = () => {
       if (error) {
         console.error("Error fetching expense:", error);
         showError("Failed to fetch expense details: " + error.message);
-        navigate('/reports'); // Redirect if expense not found or error
+        navigate('/reports');
       } else if (data) {
         form.reset({
           date: parseISO(data.date),
@@ -82,9 +87,10 @@ const EditExpense = () => {
           price_per_unit: data.price_per_unit,
           total: data.total,
           payment_mode: data.payment_mode,
-          bill_image_url: data.bill_image_url || "", // Load existing image URL
+          bill_image_url: data.bill_image_url || "",
           note: data.note || "",
         });
+        setExistingImageUrl(data.bill_image_url || null);
       }
     };
 
@@ -112,33 +118,108 @@ const EditExpense = () => {
     return () => subscription.unsubscribe();
   }, [form]);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setFilePreviewUrl(URL.createObjectURL(file));
+      // Clear existing image URL if a new file is selected
+      setExistingImageUrl(null);
+      form.setValue("bill_image_url", "");
+    } else {
+      setSelectedFile(null);
+      setFilePreviewUrl(null);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedFile(null);
+    setFilePreviewUrl(null);
+    setExistingImageUrl(null);
+    form.setValue("bill_image_url", "");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Clear the file input
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !id) {
       showError("Authentication error or expense ID missing.");
       return;
     }
 
-    const { error } = await supabase
-      .from('expenses')
-      .update({
-        date: format(values.date, 'yyyy-MM-dd'),
-        item_name: values.item_name,
-        unit: values.unit,
-        price_per_unit: values.price_per_unit,
-        total: values.total,
-        payment_mode: values.payment_mode,
-        bill_image_url: values.bill_image_url || null, // Store null if empty string
-        note: values.note,
-      })
-      .eq('id', id)
-      .eq('user_id', user.id); // Ensure only owner can update
+    let finalBillImageUrl = values.bill_image_url;
+    const toastId = showLoading("Updating expense...");
 
-    if (error) {
-      console.error("Error updating expense:", error);
-      showError("Failed to update expense: " + error.message);
-    } else {
+    try {
+      if (selectedFile) {
+        // If a new file is selected, upload it
+        const fileExtension = selectedFile.name.split('.').pop();
+        const filePath = `${user.id}/expenses/${Date.now()}.${fileExtension}`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('bill_images')
+          .upload(filePath, selectedFile, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          throw new Error("Failed to upload new bill image: " + uploadError.message);
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('bill_images')
+          .getPublicUrl(filePath);
+
+        if (!publicUrlData?.publicUrl) {
+          throw new Error("Failed to get public URL for new uploaded image.");
+        }
+        finalBillImageUrl = publicUrlData.publicUrl;
+
+        // Optionally, delete the old image from storage if it existed
+        // This requires parsing the old URL to get the path, which can be complex.
+        // For simplicity, we'll leave old images in storage for now.
+      } else if (existingImageUrl && !form.watch("bill_image_url")) {
+        // If there was an existing image but it was removed (by clearing the input or clicking remove)
+        finalBillImageUrl = null;
+        // Optionally, delete the image from storage here
+      } else if (!existingImageUrl && form.watch("bill_image_url")) {
+        // If user manually entered a URL after clearing file input
+        finalBillImageUrl = form.watch("bill_image_url");
+      } else if (existingImageUrl && !selectedFile) {
+        // If no new file and existing image was not removed, keep the existing URL
+        finalBillImageUrl = existingImageUrl;
+      } else {
+        finalBillImageUrl = null; // No image at all
+      }
+
+
+      const { error: updateError } = await supabase
+        .from('expenses')
+        .update({
+          date: format(values.date, 'yyyy-MM-dd'),
+          item_name: values.item_name,
+          unit: values.unit,
+          price_per_unit: values.price_per_unit,
+          total: values.total,
+          payment_mode: values.payment_mode,
+          bill_image_url: finalBillImageUrl,
+          note: values.note,
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (updateError) {
+        throw new Error("Failed to update expense: " + updateError.message);
+      }
+
       showSuccess("Expense updated successfully!");
       navigate('/reports');
+    } catch (error: any) {
+      console.error("Error in onSubmit:", error);
+      showError(error.message || "An unexpected error occurred.");
+    } finally {
+      dismissToast(toastId);
     }
   };
 
@@ -146,7 +227,7 @@ const EditExpense = () => {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  const billImageUrl = form.watch("bill_image_url");
+  const displayImageUrl = filePreviewUrl || existingImageUrl;
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
@@ -157,7 +238,7 @@ const EditExpense = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <CardTitle className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">Edit Expense</CardTitle>
-            <div className="w-10"></div> {/* Placeholder for alignment */}
+            <div className="w-10"></div>
           </div>
         </CardHeader>
         <CardContent>
@@ -211,7 +292,7 @@ const EditExpense = () => {
                   id="unit"
                   type="number"
                   step="0.01"
-                  {...form.register("unit")}
+                  {...form.register("unit", { valueAsNumber: true })}
                   className="mt-1"
                 />
                 {form.formState.errors.unit && (
@@ -224,7 +305,7 @@ const EditExpense = () => {
                   id="price_per_unit"
                   type="number"
                   step="0.01"
-                  {...form.register("price_per_unit")}
+                  {...form.register("price_per_unit", { valueAsNumber: true })}
                   className="mt-1"
                 />
                 {form.formState.errors.price_per_unit && (
@@ -239,9 +320,9 @@ const EditExpense = () => {
                 id="total"
                 type="number"
                 step="0.01"
-                {...form.register("total")}
+                {...form.register("total", { valueAsNumber: true })}
                 className="mt-1"
-                readOnly // Total is calculated automatically
+                readOnly
               />
               {form.formState.errors.total && (
                 <p className="text-red-500 text-sm mt-1">{form.formState.errors.total.message}</p>
@@ -249,21 +330,36 @@ const EditExpense = () => {
             </div>
 
             <div>
-              <Label htmlFor="bill_image_url">Bill Image URL (Optional)</Label>
+              <Label htmlFor="bill_image_upload">Bill Image (Optional)</Label>
               <Input
-                id="bill_image_url"
-                type="url"
-                {...form.register("bill_image_url")}
-                placeholder="https://example.com/bill.jpg"
-                className="mt-1"
+                id="bill_image_upload"
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+                className="mt-1 block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-md file:border-0
+                file:text-sm file:font-semibold
+                file:bg-primary file:text-primary-foreground
+                hover:file:bg-primary/90"
               />
+              {(displayImageUrl) && (
+                <div className="relative mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+                  <img src={displayImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleRemoveImage}
+                    className="absolute top-1 right-1 text-red-500 hover:text-red-700"
+                  >
+                    <XCircle className="h-5 w-5" />
+                  </Button>
+                </div>
+              )}
               {form.formState.errors.bill_image_url && (
                 <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
-              )}
-              {billImageUrl && (
-                <div className="mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                  <img src={billImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
-                </div>
               )}
             </div>
 
