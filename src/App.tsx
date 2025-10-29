@@ -7,7 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import AddSale from "./pages/AddSale";
-import AddExpense from "./pages/AddExpense"; // Import the new AddExpense component
+import AddExpense from "./pages/AddExpense";
+import Reports from "./pages/Reports"; // Import the new Reports component
 import { SupabaseSessionProvider } from "./integrations/supabase/supabaseContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -25,7 +26,8 @@ const App = () => (
             <Route path="/" element={<ProtectedRoute />}>
               <Route index element={<Dashboard />} />
               <Route path="/add-sale" element={<AddSale />} />
-              <Route path="/add-expense" element={<AddExpense />} /> {/* New route for Add Expense */}
+              <Route path="/add-expense" element={<AddExpense />} />
+              <Route path="/reports" element={<Reports />} /> {/* New route for Reports */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             </Route>
             <Route path="*" element={<NotFound />} />
