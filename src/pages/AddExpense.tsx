@@ -193,7 +193,7 @@ const AddExpense = () => {
         <Card className="bg-gray-800 text-gray-100 shadow-lg rounded-lg border border-gray-700">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="text-gray-300 hover:bg-gray-700">
+              <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/')} className="text-gray-300 hover:bg-gray-700">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <CardTitle className="text-2xl font-bold text-destructive">Add New Expense</CardTitle>
