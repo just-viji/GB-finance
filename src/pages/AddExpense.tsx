@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon, ArrowLeft, PlusCircle, MinusCircle } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeft, PlusCircle, MinusCircle, Image as ImageIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -43,6 +43,7 @@ const formSchema = z.object({
   }),
   items: z.array(itemSchema).min(1, "At least one item is required."),
   payment_mode: z.string().min(1, "Payment mode is required."),
+  bill_image_url: z.string().url("Must be a valid URL").optional().or(z.literal('')), // New field for image URL
   note: z.string().optional(),
 });
 
@@ -56,6 +57,7 @@ const AddExpense = () => {
       date: new Date(),
       items: [{ item_name: "", unit: 0, price_per_unit: 0, total: 0 }],
       payment_mode: "",
+      bill_image_url: "", // Default empty string
       note: "",
     },
   });
@@ -97,6 +99,7 @@ const AddExpense = () => {
       // Do NOT send 'total' to the database; it's a calculated column.
       // The database will compute it based on unit and price_per_unit.
       payment_mode: values.payment_mode,
+      bill_image_url: values.bill_image_url || null, // Store null if empty string
       note: values.note,
     }));
 
@@ -113,6 +116,7 @@ const AddExpense = () => {
         date: new Date(),
         items: [{ item_name: "", unit: 0, price_per_unit: 0, total: 0 }],
         payment_mode: "",
+        bill_image_url: "",
         note: "",
       });
       navigate('/dashboard');
@@ -122,6 +126,8 @@ const AddExpense = () => {
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
+
+  const billImageUrl = form.watch("bill_image_url");
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
@@ -262,6 +268,25 @@ const AddExpense = () => {
             )}
 
             <Separator />
+
+            <div>
+              <Label htmlFor="bill_image_url">Bill Image URL (Optional)</Label>
+              <Input
+                id="bill_image_url"
+                type="url"
+                {...form.register("bill_image_url")}
+                placeholder="https://example.com/bill.jpg"
+                className="mt-1"
+              />
+              {form.formState.errors.bill_image_url && (
+                <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
+              )}
+              {billImageUrl && (
+                <div className="mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+                  <img src={billImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
+                </div>
+              )}
+            </div>
 
             <div>
               <Label htmlFor="payment_mode">Payment Mode</Label>

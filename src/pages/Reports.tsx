@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Search } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Search, Image as ImageIcon } from 'lucide-react';
 import { format, isValid, parseISO, isSameMonth, isSameYear } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,8 +14,9 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input'; // Import Input component
+import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'; // Import Dialog components
 
 interface Sale {
   id: string;
@@ -36,6 +37,7 @@ interface Expense {
   total: number;
   payment_mode: string;
   note?: string;
+  bill_image_url?: string; // Add new field
 }
 
 const Reports = () => {
@@ -52,14 +54,14 @@ const Reports = () => {
   const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('all');
   const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('all');
   const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>(''); // State for immediate input value
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>(''); // State for debounced search
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>('');
 
   // Debounce effect for search term
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms debounce delay
+    }, 500);
 
     return () => {
       clearTimeout(handler);
@@ -90,7 +92,7 @@ const Reports = () => {
     if (salePaymentTypeFilter && salePaymentTypeFilter !== 'all') {
       salesQuery = salesQuery.eq('payment_type', salePaymentTypeFilter);
     }
-    if (debouncedSearchTerm) { // Use debounced search term here
+    if (debouncedSearchTerm) {
       salesQuery = salesQuery.or(`item.ilike.%${debouncedSearchTerm}%,category.ilike.%${debouncedSearchTerm}%`);
     }
 
@@ -118,7 +120,7 @@ const Reports = () => {
     if (expensePaymentModeFilter && expensePaymentModeFilter !== 'all') {
       expensesQuery = expensesQuery.eq('payment_mode', expensePaymentModeFilter);
     }
-    if (debouncedSearchTerm) { // Use debounced search term here
+    if (debouncedSearchTerm) {
       expensesQuery = expensesQuery.ilike('item_name', `%${debouncedSearchTerm}%`);
     }
 
@@ -153,7 +155,7 @@ const Reports = () => {
     } else if (!isLoading) {
       setLoadingData(false);
     }
-  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter, debouncedSearchTerm]); // Re-fetch when filters or DEBOUNCED search term change
+  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter, debouncedSearchTerm]);
 
   const handleDeleteSale = async (id: string) => {
     if (!confirm("Are you sure you want to delete this sale?")) return;
@@ -197,8 +199,8 @@ const Reports = () => {
     setSaleCategoryFilter('all');
     setSalePaymentTypeFilter('all');
     setExpensePaymentModeFilter('all');
-    setSearchTerm(''); // Clear immediate search term
-    setDebouncedSearchTerm(''); // Clear debounced search term
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
   };
 
   if (isLoading || loadingData) {
@@ -245,7 +247,7 @@ const Reports = () => {
             <h3 className="text-lg font-semibold mb-3 flex items-center">
               <Filter className="h-5 w-5 mr-2" /> Filter Reports
             </h3>
-            <div className="grid grid-cols-1 gap-4"> {/* Changed grid classes to make it a single column */}
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="searchTerm">Search Item/Category</Label>
                 <Input
@@ -427,6 +429,7 @@ const Reports = () => {
                             <TableHead className="text-right">Price/Unit</TableHead>
                             <TableHead className="text-right">Total</TableHead>
                             <TableHead>Payment</TableHead>
+                            <TableHead>Bill</TableHead> {/* New TableHead for Bill */}
                             <TableHead>Note</TableHead>
                             <TableHead className="text-center">Actions</TableHead>
                           </TableRow>
@@ -440,6 +443,27 @@ const Reports = () => {
                               <TableCell className="text-right">{formatCurrencyINR(expense.price_per_unit)}</TableCell>
                               <TableCell className="text-right">{formatCurrencyINR(expense.total)}</TableCell>
                               <TableCell>{expense.payment_mode}</TableCell>
+                              <TableCell> {/* New TableCell for Bill */}
+                                {expense.bill_image_url ? (
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button variant="outline" size="icon" className="h-8 w-8">
+                                        <ImageIcon className="h-4 w-4" />
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px] md:max-w-2xl lg:max-w-4xl">
+                                      <DialogHeader>
+                                        <DialogTitle>Bill Image for {expense.item_name}</DialogTitle>
+                                      </DialogHeader>
+                                      <div className="flex justify-center items-center p-4">
+                                        <img src={expense.bill_image_url} alt="Bill" className="max-w-full max-h-[80vh] object-contain" />
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </TableCell>
                               <TableCell className="max-w-[150px] truncate">{expense.note || '-'}</TableCell>
                               <TableCell className="flex justify-center space-x-2">
                                 <Button variant="outline" size="icon" onClick={() => navigate(`/edit-expense/${expense.id}`)}>

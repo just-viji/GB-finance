@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Calendar as CalendarIcon, ArrowLeft } from 'lucide-react';
+import { Calendar as CalendarIcon, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
@@ -36,6 +36,7 @@ const formSchema = z.object({
     z.number().positive("Total amount must be a positive number.")
   ),
   payment_mode: z.string().min(1, "Payment mode is required."),
+  bill_image_url: z.string().url("Must be a valid URL").optional().or(z.literal('')), // New field for image URL
   note: z.string().optional(),
 });
 
@@ -53,6 +54,7 @@ const EditExpense = () => {
       price_per_unit: 0,
       total: 0,
       payment_mode: "",
+      bill_image_url: "", // Default empty string
       note: "",
     },
   });
@@ -80,6 +82,7 @@ const EditExpense = () => {
           price_per_unit: data.price_per_unit,
           total: data.total,
           payment_mode: data.payment_mode,
+          bill_image_url: data.bill_image_url || "", // Load existing image URL
           note: data.note || "",
         });
       }
@@ -124,6 +127,7 @@ const EditExpense = () => {
         price_per_unit: values.price_per_unit,
         total: values.total,
         payment_mode: values.payment_mode,
+        bill_image_url: values.bill_image_url || null, // Store null if empty string
         note: values.note,
       })
       .eq('id', id)
@@ -141,6 +145,8 @@ const EditExpense = () => {
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
+
+  const billImageUrl = form.watch("bill_image_url");
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
@@ -239,6 +245,25 @@ const EditExpense = () => {
               />
               {form.formState.errors.total && (
                 <p className="text-red-500 text-sm mt-1">{form.formState.errors.total.message}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="bill_image_url">Bill Image URL (Optional)</Label>
+              <Input
+                id="bill_image_url"
+                type="url"
+                {...form.register("bill_image_url")}
+                placeholder="https://example.com/bill.jpg"
+                className="mt-1"
+              />
+              {form.formState.errors.bill_image_url && (
+                <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
+              )}
+              {billImageUrl && (
+                <div className="mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+                  <img src={billImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
+                </div>
               )}
             </div>
 
