@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Minus, TrendingUp } from "lucide-react";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardRecentTransactions from "@/components/DashboardRecentTransactions"; // Import the new component
+import { formatCurrencyINR } from "@/lib/currency"; // Import the new currency formatter
 
 interface FinancialSummary {
   totalSales: number;
@@ -87,7 +88,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className={`text-2xl font-bold ${summary && summary.profit >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                ${summary?.profit.toFixed(2) || '0.00'}
+                {formatCurrencyINR(summary?.profit || 0)}
               </div>
             </CardContent>
           </Card>
@@ -102,7 +103,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                ${summary?.totalSales.toFixed(2) || '0.00'}
+                {formatCurrencyINR(summary?.totalSales || 0)}
               </div>
             </CardContent>
           </Card>
@@ -113,7 +114,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-destructive">
-                ${summary?.totalExpenses.toFixed(2) || '0.00'}
+                {formatCurrencyINR(summary?.totalExpenses || 0)}
               </div>
             </CardContent>
           </Card>

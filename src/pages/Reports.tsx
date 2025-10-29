@@ -13,7 +13,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label'; // Added Label import
+import { Label } from '@/components/ui/label';
+import { formatCurrencyINR } from '@/lib/currency'; // Import the new currency formatter
 
 interface Sale {
   id: string;
@@ -322,7 +323,7 @@ const Reports = () => {
                               <TableCell>{isValid(parseISO(sale.date)) ? format(parseISO(sale.date), 'PPP') : sale.date}</TableCell>
                               <TableCell>{sale.item}</TableCell>
                               <TableCell>{sale.category}</TableCell>
-                              <TableCell className="text-right">${sale.amount.toFixed(2)}</TableCell>
+                              <TableCell className="text-right">{formatCurrencyINR(sale.amount)}</TableCell>
                               <TableCell>{sale.payment_type}</TableCell>
                               <TableCell className="max-w-[150px] truncate">{sale.note || '-'}</TableCell>
                               <TableCell className="flex justify-center space-x-2">
@@ -371,8 +372,8 @@ const Reports = () => {
                               <TableCell>{isValid(parseISO(expense.date)) ? format(parseISO(expense.date), 'PPP') : expense.date}</TableCell>
                               <TableCell>{expense.item_name}</TableCell>
                               <TableCell>{expense.unit}</TableCell>
-                              <TableCell className="text-right">${expense.price_per_unit.toFixed(2)}</TableCell>
-                              <TableCell className="text-right">${expense.total.toFixed(2)}</TableCell>
+                              <TableCell className="text-right">{formatCurrencyINR(expense.price_per_unit)}</TableCell>
+                              <TableCell className="text-right">{formatCurrencyINR(expense.total)}</TableCell>
                               <TableCell>{expense.payment_mode}</TableCell>
                               <TableCell className="max-w-[150px] truncate">{expense.note || '-'}</TableCell>
                               <TableCell className="flex justify-center space-x-2">

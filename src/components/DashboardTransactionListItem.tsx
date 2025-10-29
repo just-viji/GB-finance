@@ -2,6 +2,7 @@ import React from 'react';
 import { format, parseISO, isValid } from 'date-fns';
 import { ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrencyINR } from '@/lib/currency'; // Import the new currency formatter
 
 interface TransactionListItemProps {
   type: 'sale' | 'expense';
@@ -37,7 +38,7 @@ const DashboardTransactionListItem: React.FC<TransactionListItemProps> = ({
         </div>
       </div>
       <p className={cn("font-semibold", amountColor)}>
-        {isSale ? '+' : '-'}${amount.toFixed(2)}
+        {isSale ? '+' : ''}{formatCurrencyINR(amount)}
       </p>
     </div>
   );
