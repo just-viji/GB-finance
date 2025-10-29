@@ -18,6 +18,9 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        poppins: ["Poppins", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -67,6 +70,7 @@ export default {
         'dashboard-light-bg': "hsl(var(--dashboard-light-bg))",
         'dashboard-blue': "hsl(var(--dashboard-blue))",
         'dashboard-dark-text': "hsl(var(--dashboard-dark-text))",
+        'neon-green': 'hsl(var(--neon-green))', // Define neon green
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -97,6 +101,11 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      boxShadow: {
+        'neon-green-sm': '0 0 5px var(--neon-green)',
+        'neon-green-md': '0 0 10px var(--neon-green)',
+        'neon-green-lg': '0 0 20px var(--neon-green)',
       },
     },
   },

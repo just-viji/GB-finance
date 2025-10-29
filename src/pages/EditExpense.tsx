@@ -17,6 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
+import { motion } from 'framer-motion';
 
 const formSchema = z.object({
   date: z.date({
@@ -72,7 +73,7 @@ const EditExpense = () => {
         .from('expenses')
         .select('*')
         .eq('id', id)
-        .eq('user_id', user.id)
+        .eq('user.id', user.id)
         .single();
 
       if (error) {
@@ -224,179 +225,187 @@ const EditExpense = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-gray-100">Loading...</div>;
   }
 
   const displayImageUrl = filePreviewUrl || existingImageUrl;
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-md mt-8">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/reports')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <CardTitle className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">Edit Expense</CardTitle>
-            <div className="w-10"></div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Label htmlFor="date">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch("date") && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch("date")}
-                    onSelect={(date) => form.setValue("date", date!)}
-                    initialFocus
+    <div className="min-h-screen flex flex-col items-center bg-gray-900 text-gray-100 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md mt-8"
+      >
+        <Card className="bg-gray-800 text-gray-100 shadow-lg rounded-lg border border-gray-700">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/reports')} className="text-gray-300 hover:bg-gray-700">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <CardTitle className="text-2xl font-bold text-destructive">Edit Expense</CardTitle>
+              <div className="w-10"></div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <Label htmlFor="date" className="text-gray-300">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600",
+                        !form.watch("date") && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-neon-green" />
+                      {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700 text-gray-100">
+                    <Calendar
+                      mode="single"
+                      selected={form.watch("date")}
+                      onSelect={(date) => form.setValue("date", date!)}
+                      initialFocus
+                      className="text-gray-100"
+                    />
+                  </PopoverContent>
+                </Popover>
+                {form.formState.errors.date && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.date.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="item_name" className="text-gray-300">Item Name</Label>
+                <Input
+                  id="item_name"
+                  type="text"
+                  {...form.register("item_name")}
+                  className="mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                />
+                {form.formState.errors.item_name && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.item_name.message}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="unit" className="text-gray-300">Unit</Label>
+                  <Input
+                    id="unit"
+                    type="number"
+                    step="0.01"
+                    {...form.register("unit", { valueAsNumber: true })}
+                    className="mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
                   />
-                </PopoverContent>
-              </Popover>
-              {form.formState.errors.date && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.date.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="item_name">Item Name</Label>
-              <Input
-                id="item_name"
-                type="text"
-                {...form.register("item_name")}
-                className="mt-1"
-              />
-              {form.formState.errors.item_name && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.item_name.message}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="unit">Unit</Label>
-                <Input
-                  id="unit"
-                  type="number"
-                  step="0.01"
-                  {...form.register("unit", { valueAsNumber: true })}
-                  className="mt-1"
-                />
-                {form.formState.errors.unit && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.unit.message}</p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="price_per_unit">Price Per Unit</Label>
-                <Input
-                  id="price_per_unit"
-                  type="number"
-                  step="0.01"
-                  {...form.register("price_per_unit", { valueAsNumber: true })}
-                  className="mt-1"
-                />
-                {form.formState.errors.price_per_unit && (
-                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.price_per_unit.message}</p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="total">Total Amount</Label>
-              <Input
-                id="total"
-                type="number"
-                step="0.01"
-                {...form.register("total", { valueAsNumber: true })}
-                className="mt-1"
-                readOnly
-              />
-              {form.formState.errors.total && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.total.message}</p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="bill_image_upload">Bill Image (Optional)</Label>
-              <Input
-                id="bill_image_upload"
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-md file:border-0
-                file:text-sm file:font-semibold
-                file:bg-primary file:text-primary-foreground
-                hover:file:bg-primary/90"
-              />
-              {(displayImageUrl) && (
-                <div className="relative mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                  <img src={displayImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleRemoveImage}
-                    className="absolute top-1 right-1 text-red-500 hover:text-red-700"
-                  >
-                    <XCircle className="h-5 w-5" />
-                  </Button>
+                  {form.formState.errors.unit && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.unit.message}</p>
+                  )}
                 </div>
-              )}
-              {form.formState.errors.bill_image_url && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
-              )}
-            </div>
+                <div>
+                  <Label htmlFor="price_per_unit" className="text-gray-300">Price Per Unit</Label>
+                  <Input
+                    id="price_per_unit"
+                    type="number"
+                    step="0.01"
+                    {...form.register("price_per_unit", { valueAsNumber: true })}
+                    className="mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                  />
+                  {form.formState.errors.price_per_unit && (
+                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.price_per_unit.message}</p>
+                  )}
+                </div>
+              </div>
 
-            <div>
-              <Label htmlFor="payment_mode">Payment Mode</Label>
-              <Select onValueChange={(value) => form.setValue("payment_mode", value)} value={form.watch("payment_mode")}>
-                <SelectTrigger className="w-full mt-1">
-                  <SelectValue placeholder="Select payment mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Card">Card</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Cheque">Cheque</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              {form.formState.errors.payment_mode && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.payment_mode.message}</p>
-              )}
-            </div>
+              <div>
+                <Label htmlFor="total" className="text-gray-300">Total Amount</Label>
+                <Input
+                  id="total"
+                  type="number"
+                  step="0.01"
+                  {...form.register("total", { valueAsNumber: true })}
+                  className="mt-1 bg-gray-700 text-gray-100 border-gray-600"
+                  readOnly
+                />
+                {form.formState.errors.total && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.total.message}</p>
+                )}
+              </div>
 
-            <div>
-              <Label htmlFor="note">Note (Optional)</Label>
-              <Textarea
-                id="note"
-                {...form.register("note")}
-                className="mt-1"
-              />
-            </div>
+              <div>
+                <Label htmlFor="bill_image_upload" className="text-gray-300">Bill Image (Optional)</Label>
+                <Input
+                  id="bill_image_upload"
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="mt-1 block w-full text-sm text-gray-400
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-neon-green file:text-primary-foreground
+                  hover:file:bg-neon-green/90"
+                />
+                {(displayImageUrl) && (
+                  <div className="relative mt-2 p-2 border rounded-md bg-gray-700 border-gray-600 flex items-center justify-center">
+                    <img src={displayImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleRemoveImage}
+                      className="absolute top-1 right-1 text-red-500 hover:text-red-700"
+                    >
+                      <XCircle className="h-5 w-5" />
+                    </Button>
+                  </div>
+                )}
+                {form.formState.errors.bill_image_url && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
+                )}
+              </div>
 
-            <Button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
-              Update Expense
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div>
+                <Label htmlFor="payment_mode" className="text-gray-300">Payment Mode</Label>
+                <Select onValueChange={(value) => form.setValue("payment_mode", value)} value={form.watch("payment_mode")}>
+                  <SelectTrigger className="w-full mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green">
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.payment_mode && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.payment_mode.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="note" className="text-gray-300">Note (Optional)</Label>
+                <Textarea
+                  id="note"
+                  {...form.register("note")}
+                  className="mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                />
+              </div>
+
+              <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90 text-primary-foreground shadow-sm transition-all duration-300">
+                Update Expense
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };

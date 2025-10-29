@@ -3,6 +3,7 @@ import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { User as UserIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const DashboardHeader = () => {
   const { user, isLoading } = useSupabase();
@@ -42,28 +43,34 @@ const DashboardHeader = () => {
 
   if (isLoading || loadingProfile) {
     return (
-      <Card className="w-full mb-6 bg-white dark:bg-gray-800 shadow-md">
+      <Card className="w-full mb-6 bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700">
         <CardHeader>
-          <CardTitle className="text-3xl font-bold text-primary">GB Finance Dashboard</CardTitle>
+          <CardTitle className="text-3xl font-bold text-neon-green">GB Finance Dashboard</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-600 dark:text-gray-300">Loading user data...</p>
+          <p className="text-gray-400">Loading user data...</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="w-full mb-6 bg-white dark:bg-gray-800 shadow-md">
-      <CardHeader>
-        <CardTitle className="text-3xl font-bold text-primary">GB Finance Dashboard</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-lg text-gray-600 dark:text-gray-300 flex items-center">
-          <UserIcon className="h-5 w-5 mr-2 text-blue-500" /> Welcome, {displayName}!
-        </p>
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="w-full mb-6 bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold text-neon-green">GB Finance Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-lg text-gray-300 flex items-center">
+            <UserIcon className="h-5 w-5 mr-2 text-blue-400" /> Welcome, {displayName}!
+          </p>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 

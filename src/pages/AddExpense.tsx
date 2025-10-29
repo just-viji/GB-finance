@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 import { Separator } from '@/components/ui/separator';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { motion } from 'framer-motion';
 
 
 const itemSchema = z.object({
@@ -27,7 +28,7 @@ const itemSchema = z.object({
     (val) => Number(val),
     z.number().positive("Unit must be a positive number.")
   ),
-  price_per_unit: z.preprocess( // Corrected from price_per_preprocess
+  price_per_unit: z.preprocess(
     (val) => Number(val),
     z.number().positive("Price per unit must be a positive number.")
   ),
@@ -176,215 +177,226 @@ const AddExpense = () => {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-gray-900 text-gray-100">Loading...</div>;
   }
 
   const currentBillImageUrl = form.watch("bill_image_url");
 
   return (
-    <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
-      <Card className="w-full max-w-3xl mt-8">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <CardTitle className="text-2xl font-bold text-yellow-700 dark:text-yellow-400">Add New Expense</CardTitle>
-            <div className="w-10"></div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <Label htmlFor="date">Date</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !form.watch("date") && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={form.watch("date")}
-                    onSelect={(date) => form.setValue("date", date!)}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-              {form.formState.errors.date && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.date.message}</p>
-              )}
+    <div className="min-h-screen flex flex-col items-center bg-gray-900 text-gray-100 p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-3xl mt-8"
+      >
+        <Card className="bg-gray-800 text-gray-100 shadow-lg rounded-lg border border-gray-700">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="text-gray-300 hover:bg-gray-700">
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <CardTitle className="text-2xl font-bold text-destructive">Add New Expense</CardTitle>
+              <div className="w-10"></div>
             </div>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <div>
+                <Label htmlFor="date" className="text-gray-300">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600",
+                        !form.watch("date") && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4 text-neon-green" />
+                      {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0 bg-gray-800 border border-gray-700 text-gray-100">
+                    <Calendar
+                      mode="single"
+                      selected={form.watch("date")}
+                      onSelect={(date) => form.setValue("date", date!)}
+                      initialFocus
+                      className="text-gray-100"
+                    />
+                  </PopoverContent>
+                </Popover>
+                {form.formState.errors.date && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.date.message}</p>
+                )}
+              </div>
 
-            <Separator />
+              <Separator className="bg-gray-700" />
 
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Expense Items</h3>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Item Name</TableHead>
-                    <TableHead className="w-[100px]">Unit</TableHead>
-                    <TableHead className="w-[120px]">Price/Unit</TableHead>
-                    <TableHead className="w-[120px]">Total</TableHead>
-                    <TableHead className="w-[60px] text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {fields.map((field, index) => (
-                    <TableRow key={field.id}>
-                      <TableCell>
-                        <Input
-                          id={`items.${index}.item_name`}
-                          type="text"
-                          {...form.register(`items.${index}.item_name`)}
-                          placeholder="e.g., Office Supplies"
-                        />
-                        {form.formState.errors.items?.[index]?.item_name && (
-                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.item_name?.message}</p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          id={`items.${index}.unit`}
-                          type="number"
-                          step="0.01"
-                          {...form.register(`items.${index}.unit`, { valueAsNumber: true })}
-                          placeholder="1"
-                        />
-                        {form.formState.errors.items?.[index]?.unit && (
-                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.unit?.message}</p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          id={`items.${index}.price_per_unit`}
-                          type="number"
-                          step="0.01"
-                          {...form.register(`items.${index}.price_per_unit`, { valueAsNumber: true })}
-                          placeholder="10.00"
-                        />
-                        {form.formState.errors.items?.[index]?.price_per_unit && (
-                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.price_per_unit?.message}</p>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          id={`items.${index}.total`}
-                          type="number"
-                          step="0.01"
-                          {...form.register(`items.${index}.total`, { valueAsNumber: true })}
-                          readOnly
-                          className="bg-gray-100 dark:bg-gray-700"
-                        />
-                        {form.formState.errors.items?.[index]?.total && (
-                          <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.total?.message}</p>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {fields.length > 1 && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="icon"
-                            onClick={() => remove(index)}
-                            className="h-7 w-7"
-                          >
-                            <MinusCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </TableCell>
+              <h3 className="text-lg font-semibold text-gray-100">Expense Items</h3>
+              <div className="overflow-x-auto">
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow className="bg-gray-700 hover:bg-gray-700">
+                      <TableHead className="w-[200px] text-gray-300">Item Name</TableHead>
+                      <TableHead className="w-[100px] text-gray-300">Unit</TableHead>
+                      <TableHead className="w-[120px] text-gray-300">Price/Unit</TableHead>
+                      <TableHead className="w-[120px] text-gray-300">Total</TableHead>
+                      <TableHead className="w-[60px] text-center text-gray-300">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => append({ item_name: "", unit: 0, price_per_unit: 0, total: 0 })}
-              className="w-full flex items-center justify-center mt-4"
-            >
-              <PlusCircle className="h-4 w-4 mr-2" /> Add Another Item
-            </Button>
-            {form.formState.errors.items && (
-              <p className="text-red-500 text-sm mt-1">{form.formState.errors.items.message}</p>
-            )}
-
-            <Separator />
-
-            <div>
-              <Label htmlFor="bill_image_upload">Bill Image (Optional)</Label>
-              <Input
-                id="bill_image_upload"
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                className="mt-1 block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-md file:border-0
-                file:text-sm file:font-semibold
-                file:bg-primary file:text-primary-foreground
-                hover:file:bg-primary/90"
-              />
-              {filePreviewUrl && (
-                <div className="mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                  <img src={filePreviewUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
-                </div>
+                  </TableHeader>
+                  <TableBody>
+                    {fields.map((field, index) => (
+                      <TableRow key={field.id} className="border-gray-700">
+                        <TableCell>
+                          <Input
+                            id={`items.${index}.item_name`}
+                            type="text"
+                            {...form.register(`items.${index}.item_name`)}
+                            placeholder="e.g., Office Supplies"
+                            className="bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                          />
+                          {form.formState.errors.items?.[index]?.item_name && (
+                            <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.item_name?.message}</p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            id={`items.${index}.unit`}
+                            type="number"
+                            step="0.01"
+                            {...form.register(`items.${index}.unit`, { valueAsNumber: true })}
+                            placeholder="1"
+                            className="bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                          />
+                          {form.formState.errors.items?.[index]?.unit && (
+                            <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.unit?.message}</p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            id={`items.${index}.price_per_unit`}
+                            type="number"
+                            step="0.01"
+                            {...form.register(`items.${index}.price_per_unit`, { valueAsNumber: true })}
+                            placeholder="10.00"
+                            className="bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                          />
+                          {form.formState.errors.items?.[index]?.price_per_unit && (
+                            <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.price_per_unit?.message}</p>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            id={`items.${index}.total`}
+                            type="number"
+                            step="0.01"
+                            {...form.register(`items.${index}.total`, { valueAsNumber: true })}
+                            readOnly
+                            className="bg-gray-700 text-gray-100 border-gray-600"
+                          />
+                          {form.formState.errors.items?.[index]?.total && (
+                            <p className="text-red-500 text-sm mt-1">{form.formState.errors.items[index]?.total?.message}</p>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {fields.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="icon"
+                              onClick={() => remove(index)}
+                              className="h-7 w-7 bg-red-600 hover:bg-red-700 text-white shadow-sm"
+                            >
+                              <MinusCircle className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => append({ item_name: "", unit: 0, price_per_unit: 0, total: 0 })}
+                className="w-full flex items-center justify-center mt-4 bg-gray-700 text-neon-green border-neon-green hover:bg-gray-600 hover:text-neon-green shadow-neon-green-sm"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" /> Add Another Item
+              </Button>
+              {form.formState.errors.items && (
+                <p className="text-red-500 text-sm mt-1">{form.formState.errors.items.message}</p>
               )}
-              {currentBillImageUrl && !selectedFile && ( // Show existing URL image if no new file is selected
-                <div className="mt-2 p-2 border rounded-md bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
-                  <img src={currentBillImageUrl} alt="Existing Bill" className="max-h-40 object-contain rounded-md" />
-                </div>
-              )}
-              {form.formState.errors.bill_image_url && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
-              )}
-            </div>
 
-            <div>
-              <Label htmlFor="payment_mode">Payment Mode</Label>
-              <Select onValueChange={(value) => form.setValue("payment_mode", value)} value={form.watch("payment_mode")}>
-                <SelectTrigger className="w-full mt-1">
-                  <SelectValue placeholder="Select payment mode" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Card">Card</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Cheque">Cheque</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              {form.formState.errors.payment_mode && (
-                <p className="text-red-500 text-sm mt-1">{form.formState.errors.payment_mode.message}</p>
-              )}
-            </div>
+              <Separator className="bg-gray-700" />
 
-            <div>
-              <Label htmlFor="note">Note (Optional)</Label>
-              <Textarea
-                id="note"
-                {...form.register("note")}
-                className="mt-1"
-              />
-            </div>
+              <div>
+                <Label htmlFor="bill_image_upload" className="text-gray-300">Bill Image (Optional)</Label>
+                <Input
+                  id="bill_image_upload"
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="mt-1 block w-full text-sm text-gray-400
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-md file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-neon-green file:text-primary-foreground
+                  hover:file:bg-neon-green/90"
+                />
+                {filePreviewUrl && (
+                  <div className="mt-2 p-2 border rounded-md bg-gray-700 border-gray-600 flex items-center justify-center">
+                    <img src={filePreviewUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
+                  </div>
+                )}
+                {currentBillImageUrl && !selectedFile && ( // Show existing URL image if no new file is selected
+                  <div className="mt-2 p-2 border rounded-md bg-gray-700 border-gray-600 flex items-center justify-center">
+                    <img src={currentBillImageUrl} alt="Existing Bill" className="max-h-40 object-contain rounded-md" />
+                  </div>
+                )}
+                {form.formState.errors.bill_image_url && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.bill_image_url.message}</p>
+                )}
+              </div>
 
-            <Button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white">
-              Add Expenses
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div>
+                <Label htmlFor="payment_mode" className="text-gray-300">Payment Mode</Label>
+                <Select onValueChange={(value) => form.setValue("payment_mode", value)} value={form.watch("payment_mode")}>
+                  <SelectTrigger className="w-full mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green">
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border border-gray-700 text-gray-100">
+                    <SelectItem value="Cash">Cash</SelectItem>
+                    <SelectItem value="Card">Card</SelectItem>
+                    <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="Cheque">Cheque</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {form.formState.errors.payment_mode && (
+                  <p className="text-red-500 text-sm mt-1">{form.formState.errors.payment_mode.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="note" className="text-gray-300">Note (Optional)</Label>
+                <Textarea
+                  id="note"
+                  {...form.register("note")}
+                  className="mt-1 bg-gray-700 text-gray-100 border-gray-600 focus:border-neon-green"
+                />
+              </div>
+
+              <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90 text-primary-foreground shadow-sm transition-all duration-300">
+                Add Expenses
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 };

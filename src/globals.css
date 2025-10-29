@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 @layer base {
   :root {
     --background: 0 0% 100%; /* White */
@@ -39,6 +41,8 @@
     --dashboard-light-bg: 150 40% 95%; /* Light background */
     --dashboard-blue: 205 100% 50%; /* Blue for numbers */
     --dashboard-dark-text: 222.2 84% 4.9%; /* Near Black for text */
+
+    --neon-green: 142.1 76.2% 46.3%; /* Slightly brighter green for neon effect */
   }
 
   .dark {
@@ -75,6 +79,8 @@
     --dashboard-light-bg: 217.2 32.6% 17.5%; /* Darker background for dark mode */
     --dashboard-blue: 205 100% 60%; /* Slightly lighter blue for dark mode */
     --dashboard-dark-text: 210 40% 98%; /* Off-white for text in dark mode */
+
+    --neon-green: 142.1 76.2% 46.3%; /* Slightly brighter green for neon effect */
   }
 }
 
@@ -84,6 +90,6 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-poppins; /* Apply Poppins font globally */
   }
 }

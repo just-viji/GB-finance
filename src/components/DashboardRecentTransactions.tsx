@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardTransactionListItem from './DashboardTransactionListItem';
 import { format, subDays, subWeeks, subMonths, isAfter, parseISO } from 'date-fns';
 import { showError } from '@/utils/toast';
+import { motion } from 'framer-motion';
 
 interface Sale {
   id: string;
@@ -105,51 +106,57 @@ const DashboardRecentTransactions = () => {
 
   if (loadingTransactions) {
     return (
-      <Card className="w-full mb-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
+      <Card className="w-full mb-6 bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700">
         <CardHeader>
           <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-gray-500 dark:text-gray-400">Loading recent transactions...</p>
+          <p className="text-center text-gray-400">Loading recent transactions...</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card className="w-full mb-6 bg-white dark:bg-gray-800 shadow-md rounded-lg">
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="daily" className="w-full" onValueChange={(value) => setActiveTab(value as 'daily' | 'weekly' | 'monthly')}>
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="daily">Daily</TabsTrigger>
-            <TabsTrigger value="weekly">Weekly</TabsTrigger>
-            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-          </TabsList>
-          <TabsContent value={activeTab}>
-            {displayedTransactions.length === 0 ? (
-              <p className="text-center text-gray-500 dark:text-gray-400">No transactions for this period.</p>
-            ) : (
-              <div className="space-y-2">
-                {displayedTransactions.map((tx) => (
-                  <DashboardTransactionListItem
-                    key={tx.id}
-                    type={tx.type}
-                    item={tx.item}
-                    amount={tx.amount}
-                    date={tx.date}
-                    category={tx.type === 'sale' ? tx.category : undefined}
-                    paymentMode={tx.type === 'expense' ? tx.payment_mode : undefined}
-                  />
-                ))}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 1.0 }}
+    >
+      <Card className="w-full mb-6 bg-gray-800 text-gray-100 shadow-md rounded-lg border border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="daily" className="w-full" onValueChange={(value) => setActiveTab(value as 'daily' | 'weekly' | 'monthly')}>
+            <TabsList className="grid w-full grid-cols-3 mb-4 bg-gray-700 text-gray-300">
+              <TabsTrigger value="daily" className="data-[state=active]:bg-neon-green data-[state=active]:text-primary-foreground">Daily</TabsTrigger>
+              <TabsTrigger value="weekly" className="data-[state=active]:bg-neon-green data-[state=active]:text-primary-foreground">Weekly</TabsTrigger>
+              <TabsTrigger value="monthly" className="data-[state=active]:bg-neon-green data-[state=active]:text-primary-foreground">Monthly</TabsTrigger>
+            </TabsList>
+            <TabsContent value={activeTab}>
+              {displayedTransactions.length === 0 ? (
+                <p className="text-center text-gray-400">No transactions for this period.</p>
+              ) : (
+                <div className="space-y-2">
+                  {displayedTransactions.map((tx) => (
+                    <DashboardTransactionListItem
+                      key={tx.id}
+                      type={tx.type}
+                      item={tx.item}
+                      amount={tx.amount}
+                      date={tx.date}
+                      category={tx.type === 'sale' ? tx.category : undefined}
+                      paymentMode={tx.type === 'expense' ? tx.payment_mode : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
