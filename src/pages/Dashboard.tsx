@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Plus, Minus, TrendingUp, LogOut } from "lucide-react";
+import { Plus, Minus, TrendingUp, LogOut, User } from "lucide-react"; // Import User icon
 
 interface FinancialSummary {
   totalSales: number;
@@ -87,9 +87,14 @@ const Dashboard = () => {
       <div className="flex-grow container mx-auto max-w-4xl">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-green-700 dark:text-green-400">GB Finance Dashboard</h1>
-          <Button onClick={handleLogout} variant="destructive" size="sm">
-            <LogOut className="h-4 w-4 mr-2" /> Logout
-          </Button>
+          <div className="flex space-x-2">
+            <Button onClick={() => navigate('/profile')} variant="outline" size="sm">
+              <User className="h-4 w-4 mr-2" /> Profile
+            </Button>
+            <Button onClick={handleLogout} variant="destructive" size="sm">
+              <LogOut className="h-4 w-4 mr-2" /> Logout
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
