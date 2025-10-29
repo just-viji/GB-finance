@@ -6,9 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { format } from 'date-fns';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter } from 'lucide-react';
+import { format, isValid, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Sale {
   id: string;
@@ -38,18 +42,39 @@ const Reports = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Filter states
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [saleCategoryFilter, setSaleCategoryFilter] = useState<string>('');
+  const [salePaymentTypeFilter, setSalePaymentTypeFilter] = useState<string>('');
+  const [expensePaymentModeFilter, setExpensePaymentModeFilter] = useState<string>('');
+
   const fetchReports = async () => {
     if (!user) return;
 
     setLoadingData(true);
     const userId = user.id;
 
-    // Fetch sales
-    const { data: salesData, error: salesError } = await supabase
+    // Fetch sales with filters
+    let salesQuery = supabase
       .from('sales')
       .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false });
+      .eq('user_id', userId);
+
+    if (startDate) {
+      salesQuery = salesQuery.gte('date', format(startDate, 'yyyy-MM-dd'));
+    }
+    if (endDate) {
+      salesQuery = salesQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
+    }
+    if (saleCategoryFilter) {
+      salesQuery = salesQuery.eq('category', saleCategoryFilter);
+    }
+    if (salePaymentTypeFilter) {
+      salesQuery = salesQuery.eq('payment_type', salePaymentTypeFilter);
+    }
+
+    const { data: salesData, error: salesError } = await salesQuery.order('date', { ascending: false });
 
     if (salesError) {
       console.error("Error fetching sales:", salesError);
@@ -58,12 +83,23 @@ const Reports = () => {
       setSales(salesData as Sale[]);
     }
 
-    // Fetch expenses
-    const { data: expensesData, error: expensesError } = await supabase
+    // Fetch expenses with filters
+    let expensesQuery = supabase
       .from('expenses')
       .select('*')
-      .eq('user_id', userId)
-      .order('date', { ascending: false });
+      .eq('user_id', userId);
+
+    if (startDate) {
+      expensesQuery = expensesQuery.gte('date', format(startDate, 'yyyy-MM-dd'));
+    }
+    if (endDate) {
+      expensesQuery = expensesQuery.lte('date', format(endDate, 'yyyy-MM-dd'));
+    }
+    if (expensePaymentModeFilter) {
+      expensesQuery = expensesQuery.eq('payment_mode', expensePaymentModeFilter);
+    }
+
+    const { data: expensesData, error: expensesError } = await expensesQuery.order('date', { ascending: false });
 
     if (expensesError) {
       console.error("Error fetching expenses:", expensesError);
@@ -81,7 +117,7 @@ const Reports = () => {
     } else if (!isLoading) {
       setLoadingData(false);
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, startDate, endDate, saleCategoryFilter, salePaymentTypeFilter, expensePaymentModeFilter]); // Re-fetch when filters change
 
   const handleDeleteSale = async (id: string) => {
     if (!confirm("Are you sure you want to delete this sale?")) return;
@@ -90,14 +126,14 @@ const Reports = () => {
       .from('sales')
       .delete()
       .eq('id', id)
-      .eq('user_id', user?.id); // Ensure only owner can delete
+      .eq('user_id', user?.id);
 
     if (error) {
       console.error("Error deleting sale:", error);
       showError("Failed to delete sale: " + error.message);
     } else {
       showSuccess("Sale deleted successfully!");
-      fetchReports(); // Refresh data
+      fetchReports();
     }
   };
 
@@ -108,20 +144,33 @@ const Reports = () => {
       .from('expenses')
       .delete()
       .eq('id', id)
-      .eq('user_id', user?.id); // Ensure only owner can delete
+      .eq('user_id', user?.id);
 
     if (error) {
       console.error("Error deleting expense:", error);
       showError("Failed to delete expense: " + error.message);
     } else {
       showSuccess("Expense deleted successfully!");
-      fetchReports(); // Refresh data
+      fetchReports();
     }
+  };
+
+  const handleClearFilters = () => {
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setSaleCategoryFilter('');
+    setSalePaymentTypeFilter('');
+    setExpensePaymentModeFilter('');
   };
 
   if (isLoading || loadingData) {
     return <div className="min-h-screen flex items-center justify-center">Loading reports...</div>;
   }
+
+  // Extract unique categories and payment types for filters
+  const uniqueSaleCategories = Array.from(new Set(sales.map(sale => sale.category))).sort();
+  const uniqueSalePaymentTypes = Array.from(new Set(sales.map(sale => sale.payment_type))).sort();
+  const uniqueExpensePaymentModes = Array.from(new Set(expenses.map(expense => expense.payment_mode))).sort();
 
   return (
     <div className="min-h-screen flex flex-col items-center bg-gray-100 dark:bg-gray-900 p-4">
@@ -132,10 +181,113 @@ const Reports = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <CardTitle className="text-2xl font-bold text-blue-700 dark:text-blue-400">Financial Reports</CardTitle>
-            <div className="w-10"></div> {/* Placeholder for alignment */}
+            <div className="w-10"></div>
           </div>
         </CardHeader>
         <CardContent>
+          <div className="mb-6 p-4 border rounded-lg bg-gray-50 dark:bg-gray-800">
+            <h3 className="text-lg font-semibold mb-3 flex items-center">
+              <Filter className="h-5 w-5 mr-2" /> Filter Reports
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="startDate">Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !startDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {startDate ? format(startDate, "PPP") : <span>Pick a start date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={setStartDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label htmlFor="endDate">End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !endDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {endDate ? format(endDate, "PPP") : <span>Pick an end date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={endDate}
+                      onSelect={setEndDate}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <Label htmlFor="saleCategoryFilter">Sale Category</Label>
+                <Select onValueChange={setSaleCategoryFilter} value={saleCategoryFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Categories</SelectItem>
+                    {uniqueSaleCategories.map(category => (
+                      <SelectItem key={category} value={category}>{category}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="salePaymentTypeFilter">Sale Payment Type</Label>
+                <Select onValueChange={setSalePaymentTypeFilter} value={salePaymentTypeFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select payment type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Payment Types</SelectItem>
+                    {uniqueSalePaymentTypes.map(type => (
+                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="expensePaymentModeFilter">Expense Payment Mode</Label>
+                <Select onValueChange={setExpensePaymentModeFilter} value={expensePaymentModeFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select payment mode" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Payment Modes</SelectItem>
+                    {uniqueExpensePaymentModes.map(mode => (
+                      <SelectItem key={mode} value={mode}>{mode}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <Button onClick={handleClearFilters} variant="outline" className="mt-4 w-full">
+              Clear Filters
+            </Button>
+          </div>
+
           <Tabs defaultValue="sales" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="sales">Sales</TabsTrigger>
@@ -148,7 +300,7 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent>
                   {sales.length === 0 ? (
-                    <p className="text-center text-gray-500 dark:text-gray-400">No sales recorded yet.</p>
+                    <p className="text-center text-gray-500 dark:text-gray-400">No sales recorded yet for the selected filters.</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
@@ -166,7 +318,7 @@ const Reports = () => {
                         <TableBody>
                           {sales.map((sale) => (
                             <TableRow key={sale.id}>
-                              <TableCell>{format(new Date(sale.date), 'PPP')}</TableCell>
+                              <TableCell>{isValid(parseISO(sale.date)) ? format(parseISO(sale.date), 'PPP') : sale.date}</TableCell>
                               <TableCell>{sale.item}</TableCell>
                               <TableCell>{sale.category}</TableCell>
                               <TableCell className="text-right">${sale.amount.toFixed(2)}</TableCell>
@@ -196,7 +348,7 @@ const Reports = () => {
                 </CardHeader>
                 <CardContent>
                   {expenses.length === 0 ? (
-                    <p className="text-center text-gray-500 dark:text-gray-400">No expenses recorded yet.</p>
+                    <p className="text-center text-gray-500 dark:text-gray-400">No expenses recorded yet for the selected filters.</p>
                   ) : (
                     <div className="overflow-x-auto">
                       <Table>
@@ -215,7 +367,7 @@ const Reports = () => {
                         <TableBody>
                           {expenses.map((expense) => (
                             <TableRow key={expense.id}>
-                              <TableCell>{format(new Date(expense.date), 'PPP')}</TableCell>
+                              <TableCell>{isValid(parseISO(expense.date)) ? format(parseISO(expense.date), 'PPP') : expense.date}</TableCell>
                               <TableCell>{expense.item_name}</TableCell>
                               <TableCell>{expense.unit}</TableCell>
                               <TableCell className="text-right">${expense.price_per_unit.toFixed(2)}</TableCell>
