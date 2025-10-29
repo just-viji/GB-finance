@@ -29,7 +29,7 @@ const Login = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="bg-white/10 backdrop-filter backdrop-blur-lg border border-gray-700 shadow-lg rounded-xl p-6">
+        <Card className="bg-white/10 backdrop-filter backdrop-blur-lg border border-gray-700 shadow-lg rounded-xl">
           <CardHeader className="flex flex-col items-center space-y-4">
             <img src="/finance-icon.svg" alt="GB Finance Logo" className="h-20 w-20 mb-4" />
             <CardTitle className="text-center text-3xl font-bold text-neon-green drop-shadow-md">GB Finance</CardTitle>
