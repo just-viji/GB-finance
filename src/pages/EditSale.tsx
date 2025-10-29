@@ -93,9 +93,7 @@ const EditSale = () => {
               <SelectTrigger><SelectValue placeholder="Select payment type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Cash">Cash</SelectItem>
-                <SelectItem value="Card">Card</SelectItem>
-                <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
+                <SelectItem value="UPI">UPI</SelectItem>
               </SelectContent>
             </Select>
             {form.formState.errors.payment_type && <p className="text-red-500 text-sm mt-1">{form.formState.errors.payment_type.message}</p>}

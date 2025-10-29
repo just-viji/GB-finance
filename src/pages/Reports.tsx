@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, ChevronDown, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, ChevronDown, ChevronRight, ChevronUp, Wallet, Landmark } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -30,6 +30,7 @@ const Reports = () => {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [searchTerm, setSearchTerm] = useState('');
+  const [summary, setSummary] = useState<{ cashInHand: number; bankBalance: number } | null>(null);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -54,6 +55,19 @@ const Reports = () => {
         salesQuery.order('date', { ascending: false }),
         expensesQuery.order('date', { ascending: false })
       ]);
+
+      if (salesData && transactionsData) {
+        const totalCashSales = salesData.filter(s => s.payment_type === 'Cash').reduce((acc, s) => acc + s.amount, 0);
+        const totalBankSales = salesData.filter(s => s.payment_type !== 'Cash').reduce((acc, s) => acc + s.amount, 0);
+        const totalCashExpenses = transactionsData.filter(e => e.payment_mode === 'Cash').reduce((acc, e) => acc + e.grand_total, 0);
+        const totalBankExpenses = transactionsData.filter(e => e.payment_mode !== 'Cash').reduce((acc, e) => acc + e.grand_total, 0);
+        setSummary({
+          cashInHand: totalCashSales - totalCashExpenses,
+          bankBalance: totalBankSales - totalBankExpenses,
+        });
+      } else {
+        setSummary(null);
+      }
 
       setSales(salesData || []);
 
@@ -107,6 +121,31 @@ const Reports = () => {
         </div>
       </CardHeader>
       <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Cash in Hand</CardTitle>
+              <Wallet className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${summary && summary.cashInHand >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                {formatCurrencyINR(summary?.cashInHand || 0)}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Bank Balance</CardTitle>
+              <Landmark className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-bold ${summary && summary.bankBalance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                {formatCurrencyINR(summary?.bankBalance || 0)}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen} className="mb-4">
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="w-full justify-between">
