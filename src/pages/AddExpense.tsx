@@ -63,7 +63,12 @@ const AddExpense = () => {
         const index = parseInt(name.split('.')[1]);
         const unit = form.getValues(`items.${index}.unit`);
         const price_per_unit = form.getValues(`items.${index}.price_per_unit`);
-        form.setValue(`items.${index}.total`, (unit || 0) * (price_per_unit || 0), { shouldValidate: true });
+        const currentTotal = form.getValues(`items.${index}.total`);
+        const newTotal = (unit || 0) * (price_per_unit || 0);
+
+        if (currentTotal !== newTotal) {
+          form.setValue(`items.${index}.total`, newTotal, { shouldValidate: true });
+        }
       }
     });
     return () => subscription.unsubscribe();
