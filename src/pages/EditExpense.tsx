@@ -241,7 +241,7 @@ const EditExpense = () => {
         <Card className="bg-gray-800 text-gray-100 shadow-lg rounded-lg border border-gray-700">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/reports')} className="text-gray-300 hover:bg-gray-700">
+              <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/reports')} className="text-gray-300 hover:bg-gray-700">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <CardTitle className="text-2xl font-bold text-destructive">Edit Expense</CardTitle>
@@ -255,6 +255,7 @@ const EditExpense = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
+                      type="button" // Added type="button"
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600",
@@ -356,7 +357,7 @@ const EditExpense = () => {
                   <div className="relative mt-2 p-2 border rounded-md bg-gray-700 border-gray-600 flex items-center justify-center">
                     <img src={displayImageUrl} alt="Bill Preview" className="max-h-40 object-contain rounded-md" />
                     <Button
-                      type="button"
+                      type="button" // Added type="button"
                       variant="ghost"
                       size="icon"
                       onClick={handleRemoveImage}

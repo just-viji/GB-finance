@@ -193,7 +193,7 @@ const AddExpense = () => {
         <Card className="bg-gray-800 text-gray-100 shadow-lg rounded-lg border border-gray-700">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="text-gray-300 hover:bg-gray-700">
+              <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="text-gray-300 hover:bg-gray-700">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <CardTitle className="text-2xl font-bold text-destructive">Add New Expense</CardTitle>
@@ -207,6 +207,7 @@ const AddExpense = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
+                      type="button" // Added type="button"
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal bg-gray-700 text-gray-100 border-gray-600 hover:bg-gray-600",

@@ -224,7 +224,7 @@ const Reports = () => {
         <Card className="bg-gray-800 text-gray-100 shadow-lg rounded-lg border border-gray-700">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="text-gray-300 hover:bg-gray-700">
+              <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/dashboard')} className="text-gray-300 hover:bg-gray-700">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <CardTitle className="text-2xl font-bold text-neon-green">Financial Reports</CardTitle>
@@ -271,6 +271,7 @@ const Reports = () => {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
+                        type="button" // Added type="button"
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal bg-gray-600 text-gray-100 border-gray-500 hover:bg-gray-500",
@@ -297,6 +298,7 @@ const Reports = () => {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
+                        type="button" // Added type="button"
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal bg-gray-600 text-gray-100 border-gray-500 hover:bg-gray-500",
@@ -361,7 +363,7 @@ const Reports = () => {
                   </Select>
                 </div>
               </div>
-              <Button onClick={handleClearFilters} variant="outline" className="mt-4 w-full bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 hover:text-neon-green shadow-neon-green-sm">
+              <Button type="button" onClick={handleClearFilters} variant="outline" className="mt-4 w-full bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 hover:text-neon-green shadow-neon-green-sm">
                 Clear Filters
               </Button>
             </div>
@@ -403,10 +405,10 @@ const Reports = () => {
                                 <TableCell className="text-gray-200">{sale.payment_type}</TableCell>
                                 <TableCell className="max-w-[150px] truncate text-gray-200">{sale.note || '-'}</TableCell>
                                 <TableCell className="flex justify-center space-x-2">
-                                  <Button variant="outline" size="icon" onClick={() => navigate(`/edit-sale/${sale.id}`)} className="bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 shadow-neon-green-sm">
+                                  <Button type="button" variant="outline" size="icon" onClick={() => navigate(`/edit-sale/${sale.id}`)} className="bg-gray-600 text-neon-green border-neon-green hover:bg-gray-500 shadow-neon-green-sm">
                                     <Edit className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="destructive" size="icon" onClick={() => handleDeleteSale(sale.id)} className="bg-red-600 hover:bg-red-700 text-white shadow-sm">
+                                  <Button type="button" variant="destructive" size="icon" onClick={() => handleDeleteSale(sale.id)} className="bg-red-600 hover:bg-red-700 text-white shadow-sm">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TableCell>
@@ -456,7 +458,7 @@ const Reports = () => {
                                   {expense.bill_image_url ? (
                                     <Dialog>
                                       <DialogTrigger asChild>
-                                        <Button variant="outline" size="icon" className="h-8 w-8 bg-gray-600 text-blue-400 border-blue-500 hover:bg-gray-500 shadow-sm">
+                                        <Button type="button" variant="outline" size="icon" className="h-8 w-8 bg-gray-600 text-blue-400 border-blue-500 hover:bg-gray-500 shadow-sm">
                                           <ImageIcon className="h-4 w-4" />
                                         </Button>
                                       </DialogTrigger>
@@ -475,10 +477,10 @@ const Reports = () => {
                                 </TableCell>
                                 <TableCell className="max-w-[150px] truncate text-gray-200">{expense.note || '-'}</TableCell>
                                 <TableCell className="flex justify-center space-x-2">
-                                  <Button variant="outline" size="icon" onClick={() => navigate(`/edit-expense/${expense.id}`)} className="bg-gray-600 text-yellow-400 border-yellow-500 hover:bg-gray-500 shadow-sm">
+                                  <Button type="button" variant="outline" size="icon" onClick={() => navigate(`/edit-expense/${expense.id}`)} className="bg-gray-600 text-yellow-400 border-yellow-500 hover:bg-gray-500 shadow-sm">
                                     <Edit className="h-4 w-4" />
                                   </Button>
-                                  <Button variant="destructive" size="icon" onClick={() => handleDeleteExpense(expense.id)} className="bg-red-600 hover:bg-red-700 text-white shadow-sm">
+                                  <Button type="button" variant="destructive" size="icon" onClick={() => handleDeleteExpense(expense.id)} className="bg-red-600 hover:bg-red-700 text-white shadow-sm">
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
                                 </TableCell>

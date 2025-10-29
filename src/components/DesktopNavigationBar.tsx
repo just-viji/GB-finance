@@ -55,6 +55,7 @@ const DesktopNavigationBar = () => {
           ))}
           {user && (
             <Button
+              type="button" // Added type="button"
               variant="ghost"
               onClick={handleLogout}
               className="text-gray-100 hover:bg-gray-700 hover:text-destructive transition-colors duration-200"

@@ -25,6 +25,7 @@ const FloatingActionButton = () => {
             whileTap={{ scale: 0.9 }}
           >
             <Button
+              type="button" // Added type="button"
               size="lg"
               className="rounded-full h-16 w-16 bg-neon-green text-primary-foreground shadow-neon-green-md hover:bg-neon-green/90 transition-all duration-300"
             >

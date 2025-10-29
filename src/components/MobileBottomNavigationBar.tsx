@@ -55,6 +55,7 @@ const MobileBottomNavigationBar = () => {
         ))}
         {user && (
           <button
+            type="button" // Added type="button"
             onClick={handleLogout}
             className="flex flex-col items-center justify-center text-xs font-medium h-full w-full transition-colors duration-200 text-gray-300 hover:bg-gray-800 hover:text-destructive"
           >
