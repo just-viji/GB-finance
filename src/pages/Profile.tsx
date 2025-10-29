@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, User as UserIcon } from 'lucide-react';
-import { showSuccess, showError } from '@/utils/toast';
+import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
 
 const formSchema = z.object({
   first_name: z.string().min(1, "First name is required."),
@@ -23,6 +23,9 @@ const Profile = () => {
   const navigate = useNavigate();
   const { user } = useSupabase();
   const [loadingProfile, setLoadingProfile] = useState(true);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema) });
 
@@ -41,16 +44,53 @@ const Profile = () => {
     if (user) fetchProfile();
   }, [user, form]);
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) return;
-    const { error } = await supabase.from('profiles').update({
-      ...values,
-      updated_at: new Date().toISOString(),
-    }).eq('id', user.id);
-    if (error) {
-      showError("Failed to update profile.");
-    } else {
+    const toastId = showLoading("Updating profile...");
+
+    try {
+      let newAvatarUrl = values.avatar_url;
+
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const filePath = `${user.id}/avatar.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath, selectedFile, { upsert: true });
+
+        if (uploadError) throw new Error(`Failed to upload avatar: ${uploadError.message}`);
+
+        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
+        newAvatarUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`; // Cache-busting
+      }
+
+      const { error: updateError } = await supabase.from('profiles').update({
+        ...values,
+        avatar_url: newAvatarUrl,
+        updated_at: new Date().toISOString(),
+      }).eq('id', user.id);
+
+      if (updateError) throw new Error(`Failed to update profile: ${updateError.message}`);
+
+      dismissToast(toastId);
       showSuccess("Profile updated successfully!");
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      form.setValue('avatar_url', newAvatarUrl);
+
+    } catch (error: any) {
+      dismissToast(toastId);
+      showError(error.message);
     }
   };
 
@@ -59,6 +99,7 @@ const Profile = () => {
   }
 
   const currentAvatarUrl = form.watch("avatar_url");
+  const displayAvatarUrl = previewUrl || currentAvatarUrl;
   const fallbackInitials = `${form.watch("first_name")?.[0] || ''}${form.watch("last_name")?.[0] || ''}`.toUpperCase();
 
   return (
@@ -73,13 +114,24 @@ const Profile = () => {
       </CardHeader>
       <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="flex justify-center mb-6">
+          <div className="flex flex-col items-center space-y-4 mb-6">
             <Avatar className="h-24 w-24 border-2 border-primary">
-              <AvatarImage src={currentAvatarUrl} alt="User Avatar" />
+              <AvatarImage src={displayAvatarUrl} alt="User Avatar" />
               <AvatarFallback className="bg-muted text-primary text-3xl font-bold">
                 {fallbackInitials || <UserIcon className="h-12 w-12" />}
               </AvatarFallback>
             </Avatar>
+            <Input
+              id="avatar-upload"
+              type="file"
+              accept="image/png, image/jpeg"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              className="hidden"
+            />
+            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
+              Change Avatar
+            </Button>
           </div>
           <div>
             <Label htmlFor="first_name">First Name</Label>
@@ -90,11 +142,6 @@ const Profile = () => {
             <Label htmlFor="last_name">Last Name</Label>
             <Input id="last_name" type="text" {...form.register("last_name")} />
             {form.formState.errors.last_name && <p className="text-red-500 text-sm mt-1">{form.formState.errors.last_name.message}</p>}
-          </div>
-          <div>
-            <Label htmlFor="avatar_url">Avatar URL (Optional)</Label>
-            <Input id="avatar_url" type="url" {...form.register("avatar_url")} />
-            {form.formState.errors.avatar_url && <p className="text-red-500 text-sm mt-1">{form.formState.errors.avatar_url.message}</p>}
           </div>
           <Button type="submit" className="w-full">Update Profile</Button>
         </form>
