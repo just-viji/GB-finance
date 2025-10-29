@@ -6,7 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import AddSale from "./pages/AddSale"; // Import the new AddSale component
+import AddSale from "./pages/AddSale";
+import AddExpense from "./pages/AddExpense"; // Import the new AddExpense component
 import { SupabaseSessionProvider } from "./integrations/supabase/supabaseContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -23,7 +24,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/" element={<ProtectedRoute />}>
               <Route index element={<Dashboard />} />
-              <Route path="/add-sale" element={<AddSale />} /> {/* New route for Add Sale */}
+              <Route path="/add-sale" element={<AddSale />} />
+              <Route path="/add-expense" element={<AddExpense />} /> {/* New route for Add Expense */}
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             </Route>
             <Route path="*" element={<NotFound />} />
