@@ -77,6 +77,7 @@ const Profile = () => {
       }
 
       const updates = {
+        id: user.id, // <--- Added user.id here
         first_name: values.first_name,
         last_name: values.last_name,
         avatar_url: avatarUrl,
