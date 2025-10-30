@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { PlusCircle, MinusCircle } from 'lucide-react';
+import { PlusCircle, MinusCircle, FileText } from 'lucide-react';
 
 const QuickActions = () => {
   const navigate = useNavigate();
@@ -9,7 +9,7 @@ const QuickActions = () => {
   const actions = [
     { name: 'Add Sale', icon: PlusCircle, path: '/add-sale', color: 'text-green-600' },
     { name: 'Add Expense', icon: MinusCircle, path: '/add-expense', color: 'text-red-600' },
-    // Removed 'View Reports' action
+    { name: 'View Reports', icon: FileText, path: '/reports', color: 'text-blue-600' },
   ];
 
   return (
@@ -21,8 +21,8 @@ const QuickActions = () => {
           onClick={() => navigate(action.path)}
         >
           <CardContent className="flex flex-col items-center justify-center p-6 h-full">
-            <action.icon className={`w-12 h-12 mb-4 ${action.color}`} />
-            <p className="text-base font-semibold text-center text-foreground">{action.name}</p>
+            <action.icon className={`w-12 h-12 mb-4 ${action.color}`} /> {/* Increased icon size and margin */}
+            <p className="text-base font-semibold text-center text-foreground">{action.name}</p> {/* Adjusted text size */}
           </CardContent>
         </Card>
       ))}
