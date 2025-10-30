@@ -221,8 +221,28 @@ const Reports = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Month and Year Selectors */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <Select onValueChange={(value) => setSelectedMonth(parseInt(value))} value={selectedMonth.toString()}>
+            <SelectTrigger><SelectValue placeholder="Select Month" /></SelectTrigger>
+            <SelectContent>
+              {months.map((month, index) => (
+                <SelectItem key={month} value={index.toString()}>{month}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select onValueChange={(value) => setSelectedYear(parseInt(value))} value={selectedYear.toString()}>
+            <SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger>
+            <SelectContent>
+              {years.map((year) => (
+                <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Monthly Summary Section */}
-        <h3 className="text-xl font-semibold mb-4">Monthly Overview ({months[selectedMonth]} {selectedYear})</h3>
+        <h3 className="text-xl font-semibold mb-4">Monthly Overview</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {loadingData ? (
             <>
@@ -352,25 +372,7 @@ const Reports = () => {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 border rounded-b-lg mt-[-1px]">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              {/* Month Selector */}
-              <Select onValueChange={(value) => setSelectedMonth(parseInt(value))} value={selectedMonth.toString()}>
-                <SelectTrigger><SelectValue placeholder="Select Month" /></SelectTrigger>
-                <SelectContent>
-                  {months.map((month, index) => (
-                    <SelectItem key={month} value={index.toString()}>{month}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {/* Year Selector */}
-              <Select onValueChange={(value) => setSelectedYear(parseInt(value))} value={selectedYear.toString()}>
-                <SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4"> {/* Adjusted grid for search only */}
               <Input placeholder="Search by item/note..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
