@@ -16,7 +16,8 @@ import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton component
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'; // Import Tooltip components
 
 interface Sale { id: string; date: string; amount: number; payment_type: string; note?: string; }
 interface ExpenseItem { id: string; transaction_id: string; item_name: string; total: number; unit: number; price_per_unit: number; }
@@ -32,6 +33,8 @@ const Reports = () => {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [summary, setSummary] = useState<{ cashInHand: number; bankBalance: number } | null>(null);
+
+  const hasActiveFilters = !!dateRange.from || !!searchTerm;
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -113,6 +116,12 @@ const Reports = () => {
     }
   };
 
+  const resetFilters = () => {
+    setDateRange({});
+    setSearchTerm('');
+    setIsFiltersOpen(false); // Close filters after resetting
+  };
+
   return (
     <Card className="w-full max-w-6xl mx-auto">
       <CardHeader>
@@ -150,13 +159,20 @@ const Reports = () => {
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen} className="mb-4">
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="w-full justify-between">
-              <span className="flex items-center"><Filter className="h-4 w-4 mr-2" /> Filter Reports</span>
+              <span className="flex items-center">
+                <Filter className="h-4 w-4 mr-2" /> Filter Reports
+                {hasActiveFilters && (
+                  <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
+                    Active
+                  </span>
+                )}
+              </span>
               {isFiltersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 border rounded-b-lg mt-[-1px]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input placeholder="Search by expense item..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+              <Input placeholder="Search by expense item name..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant={"outline"} className={cn("justify-start text-left font-normal", !dateRange.from && "text-muted-foreground")}>
@@ -167,11 +183,16 @@ const Reports = () => {
                 <PopoverContent className="w-auto p-0" align="start"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} /></PopoverContent>
               </Popover>
             </div>
+            {hasActiveFilters && (
+              <Button variant="ghost" onClick={resetFilters} className="mt-4 w-full">
+                Clear Filters
+              </Button>
+            )}
           </CollapsibleContent>
         </Collapsible>
 
         <Tabs defaultValue="sales">
-          <TabsList className="flex flex-col w-full md:flex-row"> {/* Changed from grid to flex-col for stacking */}
+          <TabsList className="flex flex-col w-full md:flex-row">
             <TabsTrigger value="sales" className="w-full md:w-auto">Sales</TabsTrigger>
             <TabsTrigger value="expenses" className="w-full md:w-auto">Expenses</TabsTrigger>
           </TabsList>
@@ -183,7 +204,7 @@ const Reports = () => {
                 <Skeleton className="h-10 w-full" />
               </div>
             ) : sales.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">No sales found.</p>
+              <p className="text-center text-muted-foreground py-4">No sales found. <Button variant="link" onClick={() => navigate('/add-sale')} className="p-0 h-auto">Add a new sale?</Button></p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -202,12 +223,22 @@ const Reports = () => {
                         <TableCell className="whitespace-nowrap">{s.payment_type}</TableCell>
                         <TableCell className="text-right text-green-600 whitespace-nowrap">{formatCurrencyINR(s.amount)}</TableCell>
                         <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
-                          <Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Edit Sale</p></TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}>
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Delete Sale</p></TooltipContent>
+                          </Tooltip>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -224,7 +255,7 @@ const Reports = () => {
                 <Skeleton className="h-10 w-full" />
               </div>
             ) : expenses.length === 0 ? (
-              <p className="text-center text-muted-foreground py-4">No expenses found.</p>
+              <p className="text-center text-muted-foreground py-4">No expenses found. <Button variant="link" onClick={() => navigate('/add-expense')} className="p-0 h-auto">Add a new expense?</Button></p>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
@@ -232,7 +263,7 @@ const Reports = () => {
                     <TableRow>
                       <TableHead className="w-fit"></TableHead> {/* For expand/collapse */}
                       <TableHead className="whitespace-nowrap">Date</TableHead>
-                      <TableHead className="whitespace-nowrap">Payment Mode</TableHead> {/* Added this */}
+                      <TableHead className="whitespace-nowrap">Payment Mode</TableHead>
                       <TableHead className="whitespace-nowrap">Items</TableHead>
                       <TableHead className="text-right whitespace-nowrap">Total</TableHead>
                       <TableHead className="whitespace-nowrap">Bill</TableHead>
@@ -266,15 +297,32 @@ const ExpenseRow = ({ expense, onDelete }: { expense: ExpenseTransaction; onDele
           </CollapsibleTrigger>
         </TableCell>
         <TableCell className="whitespace-nowrap">{format(parseISO(expense.date), 'PPP')}</TableCell>
-        <TableCell className="whitespace-nowrap">{expense.payment_mode}</TableCell> {/* Added this */}
+        <TableCell className="whitespace-nowrap">{expense.payment_mode}</TableCell>
         <TableCell className="whitespace-nowrap">{expense.items.length} item(s)</TableCell>
         <TableCell className="text-right text-red-600 whitespace-nowrap">{formatCurrencyINR(expense.grand_total)}</TableCell>
-        <TableCell className="whitespace-nowrap">{expense.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={expense.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell>
-        <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${expense.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button></TableCell>
+        <TableCell className="whitespace-nowrap">{expense.bill_image_url && <Dialog><DialogTrigger asChild><Tooltip><TooltipTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>View Bill</p></TooltipContent></Tooltip></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={expense.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell>
+        <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${expense.id}`)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>Edit Expense</p></TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="destructive" onClick={onDelete}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>Delete Expense</p></TooltipContent>
+          </Tooltip>
+        </TableCell>
       </TableRow>
       <CollapsibleContent asChild>
         <tr>
-          <td colSpan={7} className="p-0"> {/* Updated colSpan from 6 to 7 */}
+          <td colSpan={7} className="p-0">
             <div className="p-4 bg-muted/50">
               <h4 className="font-semibold mb-2">Items:</h4>
               <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Unit</TableHead><TableHead>Price/Unit</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
