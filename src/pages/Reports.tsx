@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, Wallet, Landmark, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, Wallet, Landmark, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -310,7 +310,7 @@ const Reports = () => {
                   </span>
                 )}
               </span>
-              {isFiltersOpen ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />} {/* Changed icons for consistency */}
+              {isFiltersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 border rounded-b-lg mt-[-1px]">
