@@ -51,6 +51,8 @@ interface MonthlyFinancialSummary {
   monthlyCashSales: number;
   monthlyGpaySales: number;
   monthlyTotalExpenses: number;
+  monthlyCashExpenses: number; // New
+  monthlyGpayExpenses: number; // New
 }
 
 const Reports = () => {
@@ -108,7 +110,7 @@ const Reports = () => {
       let monthlyGpaySales = 0;
       let monthlyTotalExpenses = 0;
       let monthlyCashExpenses = 0;
-      let monthlyBankExpenses = 0;
+      let monthlyGpayExpenses = 0;
 
       if (salesDataForMonth) {
         monthlyCashSales = salesDataForMonth.filter(s => s.payment_type === 'Cash').reduce((sum, s) => sum + s.amount, 0);
@@ -118,15 +120,17 @@ const Reports = () => {
       if (expensesDataForMonth) {
         monthlyTotalExpenses = expensesDataForMonth.reduce((sum, e) => sum + e.grand_total, 0);
         monthlyCashExpenses = expensesDataForMonth.filter(e => e.payment_mode === 'Cash').reduce((sum, e) => sum + e.grand_total, 0);
-        monthlyBankExpenses = expensesDataForMonth.filter(e => e.payment_mode !== 'Cash').reduce((sum, e) => sum + e.grand_total, 0); // Assuming Gpay/other is bank
+        monthlyGpayExpenses = expensesDataForMonth.filter(e => e.payment_mode === 'Gpay').reduce((sum, e) => sum + e.grand_total, 0);
       }
 
       setMonthlySummary({
         cashInHand: monthlyCashSales - monthlyCashExpenses,
-        bankBalance: monthlyGpaySales - monthlyBankExpenses,
+        bankBalance: monthlyGpaySales - monthlyGpayExpenses,
         monthlyCashSales,
         monthlyGpaySales,
         monthlyTotalExpenses,
+        monthlyCashExpenses,
+        monthlyGpayExpenses,
       });
 
       // Fetch data for the transaction table, applying month/year filter first, then dateRange and searchTerm
@@ -258,6 +262,40 @@ const Reports = () => {
                 <CardContent>
                   <div className="text-2xl font-bold text-red-600">
                     {formatCurrencyINR(monthlySummary?.monthlyTotalExpenses || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {loadingData ? (
+            <>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Expenses (Cash)</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {formatCurrencyINR(monthlySummary?.monthlyCashExpenses || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Expenses (Gpay)</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {formatCurrencyINR(monthlySummary?.monthlyGpayExpenses || 0)}
                   </div>
                 </CardContent>
               </Card>
