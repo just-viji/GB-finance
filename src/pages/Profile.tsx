@@ -1,34 +1,22 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSupabase } from '@/integrations/supabase/supabaseContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, User as UserIcon, LogOut } from 'lucide-react';
-import { showSuccess, showError, showLoading, dismissToast } from '@/utils/toast';
-import { Separator } from '@/components/ui/separator';
-
-const formSchema = z.object({
-  first_name: z.string().min(1, "First name is required."),
-  last_name: z.string().min(1, "Last name is required."),
-  avatar_url: z.string().url("Must be a valid URL").optional().or(z.literal('')),
-});
+import { showError, showSuccess } from '@/utils/toast';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user } = useSupabase();
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema) });
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,76 +26,14 @@ const Profile = () => {
       if (error && error.code !== 'PGRST116') { // PGRST116 means no row found, which is fine for new users
         showError("Failed to fetch profile.");
       } else if (data) {
-        form.reset(data);
+        setFirstName(data.first_name || '');
+        setLastName(data.last_name || '');
+        setAvatarUrl(data.avatar_url || null);
       }
       setLoadingProfile(false);
     };
     if (user) fetchProfile();
-  }, [user, form]);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    }
-  };
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    if (!user) return;
-    const toastId = showLoading("Updating profile...");
-
-    try {
-      let avatarUrl = values.avatar_url;
-
-      if (selectedFile) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const filePath = `${user.id}/avatar.${fileExt}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('avatars')
-          .upload(filePath, selectedFile, { upsert: true });
-
-        if (uploadError) {
-          throw new Error(`Failed to upload avatar: ${uploadError.message}`);
-        }
-
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(filePath);
-        avatarUrl = `${urlData.publicUrl}?t=${new Date().getTime()}`; // Add timestamp to bust cache
-      }
-
-      const updates = {
-        id: user.id, // <--- Added user.id here
-        first_name: values.first_name,
-        last_name: values.last_name,
-        avatar_url: avatarUrl,
-        updated_at: new Date().toISOString(),
-      };
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert(updates, { onConflict: 'id' }); // Use upsert to create if not exists, update if exists
-
-      if (updateError) {
-        throw new Error(`Failed to update profile: ${updateError.message}`);
-      }
-
-      dismissToast(toastId);
-      showSuccess("Profile updated successfully!");
-      
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Clear file input
-      }
-      
-      form.setValue('avatar_url', avatarUrl, { shouldDirty: true }); // Update form state with new URL
-
-    } catch (error: any) {
-      dismissToast(toastId);
-      showError(error.message);
-    }
-  };
+  }, [user]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -123,9 +49,7 @@ const Profile = () => {
     return <div className="flex items-center justify-center min-h-[calc(100vh-100px)]">Loading profile...</div>;
   }
 
-  const currentAvatarUrl = form.watch("avatar_url");
-  const displayAvatarUrl = previewUrl || currentAvatarUrl;
-  const fallbackInitials = `${form.watch("first_name")?.[0] || ''}${form.watch("last_name")?.[0] || ''}`.toUpperCase();
+  const fallbackInitials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -140,45 +64,29 @@ const Profile = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="flex flex-col items-center space-y-4 mb-6">
-            <Avatar className="h-24 w-24 border-2 border-primary">
-              <AvatarImage src={displayAvatarUrl} alt="User Avatar" />
-              <AvatarFallback className="bg-muted text-primary text-3xl font-bold">
-                {fallbackInitials || <UserIcon className="h-12 w-12" />}
-              </AvatarFallback>
-            </Avatar>
-            <Input
-              id="avatar-upload"
-              type="file"
-              accept="image/png, image/jpeg"
-              onChange={handleFileChange}
-              ref={fileInputRef}
-              className="hidden"
-            />
-            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()}>
-              Change Avatar
-            </Button>
-          </div>
+        <div className="flex flex-col items-center space-y-4 mb-6">
+          <Avatar className="h-24 w-24 border-2 border-primary">
+            <AvatarImage src={avatarUrl || undefined} alt="User Avatar" />
+            <AvatarFallback className="bg-muted text-primary text-3xl font-bold">
+              {fallbackInitials || <UserIcon className="h-12 w-12" />}
+            </AvatarFallback>
+          </Avatar>
+        </div>
 
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={user?.email || ''} readOnly className="bg-muted cursor-not-allowed" />
-            </div>
-            <div>
-              <Label htmlFor="first_name">First Name</Label>
-              <Input id="first_name" type="text" {...form.register("first_name")} />
-              {form.formState.errors.first_name && <p className="text-red-500 text-sm mt-1">{form.formState.errors.first_name.message}</p>}
-            </div>
-            <div>
-              <Label htmlFor="last_name">Last Name</Label>
-              <Input id="last_name" type="text" {...form.register("last_name")} />
-              {form.formState.errors.last_name && <p className="text-red-500 text-sm mt-1">{form.formState.errors.last_name.message}</p>}
-            </div>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" value={user?.email || ''} readOnly className="bg-muted cursor-not-allowed" />
           </div>
-          <Button type="submit" className="w-full">Update Profile</Button>
-        </form>
+          <div>
+            <Label htmlFor="first_name">First Name</Label>
+            <Input id="first_name" type="text" value={firstName} readOnly className="bg-muted cursor-not-allowed" />
+          </div>
+          <div>
+            <Label htmlFor="last_name">Last Name</Label>
+            <Input id="last_name" type="text" value={lastName} readOnly className="bg-muted cursor-not-allowed" />
+          </div>
+        </div>
       </CardContent>
       <CardFooter className="flex justify-center pt-4">
         <Button
