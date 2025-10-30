@@ -8,6 +8,7 @@ import DashboardRecentTransactions from "@/components/DashboardRecentTransaction
 import DashboardChart from "@/components/DashboardChart";
 import QuickActions from "@/components/QuickActions";
 import { formatCurrencyINR } from "@/lib/currency";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton component
 
 interface FinancialSummary {
   totalSales: number;
@@ -16,10 +17,9 @@ interface FinancialSummary {
 }
 
 const Dashboard = () => {
-  const { user, isLoading } = useSupabase();
+  const { user, profile, isLoading } = useSupabase(); // Get profile from context
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [loadingData, setLoadingData] = useState(true);
-  const [displayName, setDisplayName] = useState<string>('Guest');
 
   useEffect(() => {
     const fetchFinancialData = async () => {
@@ -27,19 +27,6 @@ const Dashboard = () => {
 
       setLoadingData(true);
       const userId = user.id;
-
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', user.id)
-        .single();
-      
-      if (profileData) {
-        const name = [profileData.first_name, profileData.last_name].filter(Boolean).join(' ');
-        setDisplayName(name || user.email || 'User');
-      } else {
-        setDisplayName(user.email || 'User');
-      }
 
       const { data: salesData, error: salesError } = await supabase
         .from('sales')
@@ -80,8 +67,10 @@ const Dashboard = () => {
     }
   }, [user, isLoading]);
 
-  if (isLoading || loadingData) {
-    return <div className="min-h-screen flex items-center justify-center">Loading data...</div>;
+  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || user?.email || 'User';
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading authentication...</div>;
   }
 
   return (
@@ -94,43 +83,72 @@ const Dashboard = () => {
       <QuickActions />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrencyINR(summary?.totalSales || 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
-            <TrendingDown className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrencyINR(summary?.totalExpenses || 0)}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${summary && summary.profit >= 0 ? 'text-primary' : 'text-destructive'}`}>
-              {formatCurrencyINR(summary?.profit || 0)}
-            </div>
-          </CardContent>
-        </Card>
+        {loadingData ? (
+          <>
+            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+          </>
+        ) : (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">
+                  {formatCurrencyINR(summary?.totalSales || 0)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Expenses</CardTitle>
+                <TrendingDown className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-600">
+                  {formatCurrencyINR(summary?.totalExpenses || 0)}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Net Profit</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${summary && summary.profit >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                  {formatCurrencyINR(summary?.profit || 0)}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
-      <DashboardChart />
-      <DashboardRecentTransactions />
+      {loadingData ? (
+        <Card>
+          <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+          <CardContent><Skeleton className="h-[300px] w-full" /></CardContent>
+        </Card>
+      ) : (
+        <DashboardChart />
+      )}
+      
+      {loadingData ? (
+        <Card>
+          <CardHeader><Skeleton className="h-6 w-3/4" /></CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-16 w-full" />
+          </CardContent>
+        </Card>
+      ) : (
+        <DashboardRecentTransactions />
+      )}
       <MadeWithDyad />
     </div>
   );
