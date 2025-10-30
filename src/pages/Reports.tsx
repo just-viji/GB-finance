@@ -422,13 +422,13 @@ const Reports = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">Date</TableHead>
-                  <TableHead className="whitespace-nowrap">Type</TableHead>
-                  <TableHead className="whitespace-nowrap">Category</TableHead>
-                  <TableHead className="whitespace-nowrap">Description</TableHead>
-                  <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
-                  <TableHead className="whitespace-nowrap">Bill</TableHead>
-                  <TableHead className="whitespace-nowrap">Actions</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Bill</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -457,14 +457,14 @@ const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransac
 
   return (
     <TableRow>
-      <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'PPP')}</TableCell>
-      <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
-      <TableCell className="whitespace-nowrap">{category}</TableCell>
-      <TableCell className="whitespace-nowrap">{description}</TableCell>
-      <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>
+      <TableCell>{format(parseISO(transaction.date), 'PPP')}</TableCell>
+      <TableCell>{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
+      <TableCell>{category}</TableCell>
+      <TableCell>{description}</TableCell>
+      <TableCell className={cn("text-right", amountColor)}>
         {isExpense ? '-' : '+'}{formatCurrencyINR(transaction.amount)}
       </TableCell>
-      <TableCell className="whitespace-nowrap">
+      <TableCell>
         {isExpense && transaction.bill_image_url && (
           <Dialog>
             <DialogTrigger asChild>
@@ -479,7 +479,7 @@ const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransac
           </Dialog>
         )}
       </TableCell>
-      <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
+      <TableCell className="flex gap-2 flex-nowrap">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button size="icon" variant="outline" onClick={() => navigate(editPath)}>
