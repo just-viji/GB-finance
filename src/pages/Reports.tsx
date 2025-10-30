@@ -46,13 +46,14 @@ interface UnifiedExpense {
 type UnifiedTransaction = UnifiedSale | UnifiedExpense;
 
 interface MonthlyFinancialSummary {
+  totalMonthlySales: number; // New field
   cashInHand: number;
   bankBalance: number;
   monthlyCashSales: number;
   monthlyGpaySales: number;
   monthlyTotalExpenses: number;
-  monthlyCashExpenses: number; // New
-  monthlyGpayExpenses: number; // New
+  monthlyCashExpenses: number;
+  monthlyGpayExpenses: number;
 }
 
 const Reports = () => {
@@ -122,8 +123,11 @@ const Reports = () => {
         monthlyCashExpenses = expensesDataForMonth.filter(e => e.payment_mode === 'Cash').reduce((sum, e) => sum + e.grand_total, 0);
         monthlyGpayExpenses = expensesDataForMonth.filter(e => e.payment_mode === 'Gpay').reduce((sum, e) => sum + e.grand_total, 0);
       }
+      
+      const totalMonthlySales = monthlyCashSales + monthlyGpaySales;
 
       setMonthlySummary({
+        totalMonthlySales, // Set the new total
         cashInHand: monthlyCashSales - monthlyCashExpenses,
         bankBalance: monthlyGpaySales - monthlyGpayExpenses,
         monthlyCashSales,
@@ -252,6 +256,18 @@ const Reports = () => {
             </>
           ) : (
             <>
+              {/* Total Monthly Sales Card */}
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Monthly Sales</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">
+                    {formatCurrencyINR(monthlySummary?.totalMonthlySales || 0)}
+                  </div>
+                </CardContent>
+              </Card>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Monthly Sales (Cash)</CardTitle>
@@ -274,6 +290,19 @@ const Reports = () => {
                   </div>
                 </CardContent>
               </Card>
+            </>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"> {/* Changed to 3 columns for consistency */}
+          {loadingData ? (
+            <>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+            </>
+          ) : (
+            <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Monthly Total Expenses</CardTitle>
@@ -285,18 +314,6 @@ const Reports = () => {
                   </div>
                 </CardContent>
               </Card>
-            </>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {loadingData ? (
-            <>
-              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            </>
-          ) : (
-            <>
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Monthly Expenses (Cash)</CardTitle>
@@ -372,7 +389,7 @@ const Reports = () => {
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 border rounded-b-lg mt-[-1px]">
-            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4"> {/* Adjusted grid for search only */}
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4 mb-4">
               <Input placeholder="Search by item/note..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -422,13 +439,13 @@ const Reports = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Bill</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead className="whitespace-nowrap">Date</TableHead>
+                  <TableHead className="whitespace-nowrap">Type</TableHead>
+                  <TableHead className="whitespace-nowrap">Category</TableHead>
+                  <TableHead className="whitespace-nowrap">Description</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
+                  <TableHead className="whitespace-nowrap">Bill</TableHead>
+                  <TableHead className="whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -457,14 +474,14 @@ const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransac
 
   return (
     <TableRow>
-      <TableCell>{format(parseISO(transaction.date), 'PPP')}</TableCell>
-      <TableCell>{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
-      <TableCell>{category}</TableCell>
-      <TableCell>{description}</TableCell>
-      <TableCell className={cn("text-right", amountColor)}>
+      <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'PPP')}</TableCell>
+      <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
+      <TableCell className="whitespace-nowrap">{category}</TableCell>
+      <TableCell className="whitespace-nowrap">{description}</TableCell>
+      <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>
         {isExpense ? '-' : '+'}{formatCurrencyINR(transaction.amount)}
       </TableCell>
-      <TableCell>
+      <TableCell className="whitespace-nowrap">
         {isExpense && transaction.bill_image_url && (
           <Dialog>
             <DialogTrigger asChild>
@@ -479,7 +496,7 @@ const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransac
           </Dialog>
         )}
       </TableCell>
-      <TableCell className="flex gap-2 flex-nowrap">
+      <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button size="icon" variant="outline" onClick={() => navigate(editPath)}>
