@@ -181,7 +181,7 @@ const EditExpense = () => {
                 <SelectTrigger><SelectValue placeholder="Select payment mode" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
+                  <SelectItem value="Gpay">Gpay</SelectItem>
                 </SelectContent>
               </Select>
             </div>

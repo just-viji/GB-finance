@@ -175,7 +175,7 @@ const AddExpense = () => {
                 <SelectTrigger><SelectValue placeholder="Select payment mode" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="UPI">UPI</SelectItem>
+                  <SelectItem value="Gpay">Gpay</SelectItem>
                 </SelectContent>
               </Select>
               {form.formState.errors.payment_mode && <p className="text-red-500 text-sm mt-1">{form.formState.errors.payment_mode.message}</p>}
