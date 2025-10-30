@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, ChevronDown, ChevronRight, ChevronUp, Wallet, Landmark } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, Wallet, Landmark } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Keep Collapsible for filter section
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -250,11 +250,10 @@ const Reports = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-fit"></TableHead> {/* For expand/collapse */}
                   <TableHead className="whitespace-nowrap">Date</TableHead>
                   <TableHead className="whitespace-nowrap">Type</TableHead>
                   <TableHead className="whitespace-nowrap">Category</TableHead>
-                  <TableHead className className="whitespace-nowrap">Description</TableHead>
+                  <TableHead className="whitespace-nowrap">Description</TableHead>
                   <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
                   <TableHead className="whitespace-nowrap">Bill</TableHead>
                   <TableHead className="whitespace-nowrap">Actions</TableHead>
@@ -275,89 +274,58 @@ const Reports = () => {
 
 const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransaction; onDelete: (type: 'sale' | 'expense', id: string) => void }) => {
   const navigate = useNavigate();
-  const [isOpen, setIsOpen] = useState(false);
 
   const isExpense = transaction.type === 'expense';
   const amountColor = isExpense ? 'text-red-600' : 'text-green-600';
   const editPath = isExpense ? `/edit-expense/${transaction.id}` : `/edit-sale/${transaction.id}`;
   const category = isExpense ? transaction.payment_mode : transaction.payment_type;
-  const description = isExpense ? (transaction.items.length > 0 ? transaction.items[0].item_name + (transaction.items.length > 1 ? ` (+${transaction.items.length - 1} more)` : '') : transaction.note || 'Expense') : transaction.note || 'Sale';
+  const description = isExpense 
+    ? (transaction.items.length > 0 ? transaction.items.map(item => item.item_name).join(', ') : transaction.note || 'Expense') 
+    : transaction.note || 'Sale';
 
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <TableRow>
-        <TableCell className="whitespace-nowrap">
-          {isExpense && (
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" size="icon">{isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</Button>
-            </CollapsibleTrigger>
-          )}
-        </TableCell>
-        <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'PPP')}</TableCell>
-        <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
-        <TableCell className="whitespace-nowrap">{category}</TableCell>
-        <TableCell className="whitespace-nowrap">{description}</TableCell>
-        <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>{formatCurrencyINR(transaction.amount)}</TableCell>
-        <TableCell className="whitespace-nowrap">
-          {isExpense && transaction.bill_image_url && (
-            <Dialog>
-              <DialogTrigger asChild>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button>
-                  </TooltipTrigger>
-                  <TooltipContent><p>View Bill</p></TooltipContent>
-                </Tooltip>
-              </DialogTrigger>
-              <DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={transaction.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent>
-            </Dialog>
-          )}
-        </TableCell>
-        <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="outline" onClick={() => navigate(editPath)}>
-                <Edit className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>{isExpense ? 'Edit Expense' : 'Edit Sale'}</p></TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="destructive" onClick={() => onDelete(transaction.type, transaction.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>{isExpense ? 'Delete Expense' : 'Delete Sale'}</p></TooltipContent>
-          </Tooltip>
-        </TableCell>
-      </TableRow>
-      {isExpense && isOpen && (
-        <CollapsibleContent asChild>
-          <tr>
-            <td colSpan={8} className="p-0"> {/* Updated colSpan to match new table structure */}
-              <div className="p-4 bg-muted/50">
-                <h4 className="font-semibold mb-2">Items:</h4>
-                {transaction.items.length > 0 ? (
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Unit</TableHead><TableHead>Price/Unit</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
-                    <TableBody>{transaction.items.map(item => <TableRow key={item.id}><TableCell>{item.item_name}</TableCell><TableCell>{item.unit}</TableCell><TableCell>{formatCurrencyINR(item.price_per_unit)}</TableCell><TableCell className="text-right">{formatCurrencyINR(item.total)}</TableCell></TableRow>)}</TableBody>
-                  </Table>
-                ) : (
-                  <p className="text-muted-foreground text-sm">No specific items recorded for this expense.</p>
-                )}
-                {transaction.note && (
-                  <div className="mt-4">
-                    <h4 className="font-semibold mb-1">Note:</h4>
-                    <p className="text-sm text-muted-foreground">{transaction.note}</p>
-                  </div>
-                )}
-              </div>
-            </td>
-          </tr>
-        </CollapsibleContent>
-      )}
-    </Collapsible>
+    <TableRow>
+      <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'PPP')}</TableCell>
+      <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
+      <TableCell className="whitespace-nowrap">{category}</TableCell>
+      <TableCell className="whitespace-nowrap">{description}</TableCell>
+      <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>
+        {isExpense ? '-' : '+'}{formatCurrencyINR(transaction.amount)}
+      </TableCell>
+      <TableCell className="whitespace-nowrap">
+        {isExpense && transaction.bill_image_url && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button>
+                </TooltipTrigger>
+                <TooltipContent><p>View Bill</p></TooltipContent>
+              </Tooltip>
+            </DialogTrigger>
+            <DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={transaction.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent>
+          </Dialog>
+        )}
+      </TableCell>
+      <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button size="icon" variant="outline" onClick={() => navigate(editPath)}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>{isExpense ? 'Edit Expense' : 'Edit Sale'}</p></TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button size="icon" variant="destructive" onClick={() => onDelete(transaction.type, transaction.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent><p>{isExpense ? 'Delete Expense' : 'Delete Sale'}</p></TooltipContent>
+        </Tooltip>
+      </TableCell>
+    </TableRow>
   );
 };
 
