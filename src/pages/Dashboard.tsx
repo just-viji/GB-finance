@@ -28,29 +28,22 @@ const Dashboard = () => {
       setLoadingData(true);
       const userId = user.id;
 
-      const { data: salesData, error: salesError } = await supabase
+      const { data: salesData } = await supabase
         .from("sales")
         .select("amount")
         .eq("user_id", userId);
 
-      if (salesError) {
-        console.error("Error fetching sales:", salesError);
-        setLoadingData(false);
-        return;
-      }
-      const totalSales = salesData.reduce((sum, sale) => sum + (sale.amount || 0), 0);
+      const totalSales = (salesData || []).reduce(
+        (sum, sale) => sum + (sale.amount || 0),
+        0
+      );
 
-      const { data: expensesData, error: expensesError } = await supabase
+      const { data: expensesData } = await supabase
         .from("expense_transactions")
         .select("grand_total")
         .eq("user_id", userId);
 
-      if (expensesError) {
-        console.error("Error fetching expenses:", expensesError);
-        setLoadingData(false);
-        return;
-      }
-      const totalExpenses = expensesData.reduce(
+      const totalExpenses = (expensesData || []).reduce(
         (sum, expense) => sum + (expense.grand_total || 0),
         0
       );
@@ -64,8 +57,7 @@ const Dashboard = () => {
     };
 
     if (user) fetchFinancialData();
-    else if (!isLoading) setLoadingData(false);
-  }, [user, isLoading]);
+  }, [user]);
 
   const displayName =
     [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") ||
@@ -74,38 +66,33 @@ const Dashboard = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-white bg-black">
+      <div className="min-h-screen flex items-center justify-center">
         Loading authentication...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white px-4 py-6 space-y-8">
+    <div className="min-h-screen bg-gray-50 px-4 py-6 space-y-8">
       {/* Header */}
-      <header className="text-center">
-        <h2 className="text-3xl font-extrabold text-green-500">
-          Welcome, {displayName}!
+      <header className="flex flex-col space-y-1">
+        <h2 className="text-3xl font-semibold text-gray-900">
+          Welcome, <span className="text-green-600">{displayName}</span> 👋
         </h2>
-        <p className="text-gray-400 mt-1">
-          Here's your financial overview.
+        <p className="text-gray-500 text-sm">
+          Here’s your financial overview.
         </p>
       </header>
 
       {/* Quick Actions */}
-      <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl shadow-lg">
-        <QuickActions />
-      </div>
+      <QuickActions />
 
-      {/* Financial Summary */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {loadingData ? (
           <>
             {[1, 2, 3].map((i) => (
-              <Card
-                key={i}
-                className="bg-white/5 border border-white/10 rounded-2xl shadow-lg"
-              >
+              <Card key={i}>
                 <CardHeader>
                   <Skeleton className="h-4 w-1/2" />
                 </CardHeader>
@@ -117,50 +104,47 @@ const Dashboard = () => {
           </>
         ) : (
           <>
-            {/* Sales */}
-            <Card className="bg-white/5 border border-green-500 rounded-2xl shadow-md hover:shadow-green-700/30 transition">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all rounded-2xl">
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle className="text-gray-700 text-sm font-medium">
                   Total Sales
                 </CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-400" />
+                <TrendingUp className="h-5 w-5 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-400">
+                <div className="text-2xl font-semibold text-green-600">
                   {formatCurrencyINR(summary?.totalSales || 0)}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Expenses */}
-            <Card className="bg-white/5 border border-red-500 rounded-2xl shadow-md hover:shadow-red-700/30 transition">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all rounded-2xl">
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle className="text-gray-700 text-sm font-medium">
                   Total Expenses
                 </CardTitle>
-                <TrendingDown className="h-4 w-4 text-red-400" />
+                <TrendingDown className="h-5 w-5 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-red-400">
+                <div className="text-2xl font-semibold text-red-600">
                   {formatCurrencyINR(summary?.totalExpenses || 0)}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Profit */}
-            <Card className="bg-white/5 border border-blue-500 rounded-2xl shadow-md hover:shadow-blue-700/30 transition">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-gray-300">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all rounded-2xl">
+              <CardHeader className="flex justify-between items-center">
+                <CardTitle className="text-gray-700 text-sm font-medium">
                   Net Profit
                 </CardTitle>
-                <Wallet className="h-4 w-4 text-blue-400" />
+                <Wallet className="h-5 w-5 text-gray-500" />
               </CardHeader>
               <CardContent>
                 <div
-                  className={`text-2xl font-bold ${
+                  className={`text-2xl font-semibold ${
                     summary && summary.profit >= 0
-                      ? "text-green-400"
-                      : "text-red-400"
+                      ? "text-green-600"
+                      : "text-red-600"
                   }`}
                 >
                   {formatCurrencyINR(summary?.profit || 0)}
@@ -171,37 +155,23 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Chart */}
-      <div className="bg-white/5 p-4 rounded-2xl border border-white/10 shadow-lg">
+      {/* Chart Section */}
+      <section>
         {loadingData ? (
-          <>
-            <Skeleton className="h-6 w-3/4 mb-4" />
-            <Skeleton className="h-[300px] w-full" />
-          </>
+          <Card className="border-gray-200 shadow-sm rounded-2xl">
+            <CardHeader>
+              <Skeleton className="h-6 w-3/4" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+          </Card>
         ) : (
           <DashboardChart />
         )}
-      </div>
+      </section>
 
       {/* Recent Transactions */}
-      <div className="bg-white/5 p-4 rounded-2xl border border-white/10 shadow-lg">
+      <section>
         {loadingData ? (
-          <>
-            <Skeleton className="h-6 w-3/4 mb-4" />
-            <Skeleton className="h-10 w-full mb-2" />
-            <Skeleton className="h-16 w-full mb-2" />
-            <Skeleton className="h-16 w-full mb-2" />
-          </>
-        ) : (
-          <DashboardRecentTransactions />
-        )}
-      </div>
-
-      <div className="pt-6">
-        <MadeWithDyad />
-      </div>
-    </div>
-  );
-};
-
-export default Dashboard;
+          <
