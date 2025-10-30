@@ -136,7 +136,7 @@ const Profile = () => {
   const fallbackInitials = `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-xl mx-auto"> {/* Changed max-w-2xl to max-w-xl */}
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -145,7 +145,7 @@ const Profile = () => {
             </Button>
             <CardTitle className="text-2xl font-bold text-primary">User Profile</CardTitle>
           </div>
-        </div>
+        </CardHeader>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col items-center space-y-4 mb-6">

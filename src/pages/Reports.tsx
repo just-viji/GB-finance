@@ -217,7 +217,7 @@ const Reports = () => {
   };
 
   return (
-    <Card className="w-full max-w-6xl mx-auto">
+    <Card className="w-full max-w-4xl mx-auto"> {/* Changed max-w-6xl to max-w-4xl */}
       <CardHeader>
         <div className="flex items-center gap-4">
           <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/')}><ArrowLeft className="h-5 w-5" /></Button>

@@ -144,7 +144,7 @@ const AddExpense = () => {
   };
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
+    <Card className="w-full max-w-2xl mx-auto"> {/* Changed max-w-3xl to max-w-2xl */}
       <CardHeader>
         <div className="flex items-center gap-4">
           <Button type="button" variant="ghost" size="icon" onClick={() => navigate('/')}>
