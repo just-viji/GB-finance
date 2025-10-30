@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, ChevronDown, ChevronUp, Wallet, Landmark } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, Wallet, Landmark, TrendingUp, TrendingDown } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'; // Keep Collapsible for filter section
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -45,6 +45,14 @@ interface UnifiedExpense {
 
 type UnifiedTransaction = UnifiedSale | UnifiedExpense;
 
+interface MonthlyFinancialSummary {
+  cashInHand: number;
+  bankBalance: number;
+  monthlyCashSales: number;
+  monthlyGpaySales: number;
+  monthlyTotalExpenses: number;
+}
+
 const Reports = () => {
   const navigate = useNavigate();
   const { user } = useSupabase();
@@ -54,59 +62,105 @@ const Reports = () => {
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<'all' | 'sale' | 'expense'>('all');
-  const [summary, setSummary] = useState<{ cashInHand: number; bankBalance: number } | null>(null);
+  const [monthlySummary, setMonthlySummary] = useState<MonthlyFinancialSummary | null>(null);
+
+  const currentMonth = new Date().getMonth(); // 0-indexed
+  const currentYear = new Date().getFullYear();
+  const [selectedMonth, setSelectedMonth] = useState<number>(currentMonth);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
   const hasActiveFilters = !!dateRange.from || !!searchTerm || transactionTypeFilter !== 'all';
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - i); // Current year and past 4 years
 
   useEffect(() => {
     const fetchReports = async () => {
       if (!user) return;
       setLoadingData(true);
 
-      let salesQuery = supabase.from('sales').select('*').eq('user_id', user.id);
-      let expensesQuery = supabase.from('expense_transactions').select('*').eq('user_id', user.id);
+      const userId = user.id;
+      const startOfMonth = format(new Date(selectedYear, selectedMonth, 1), 'yyyy-MM-dd');
+      const endOfMonth = format(new Date(selectedYear, selectedMonth + 1, 0), 'yyyy-MM-dd');
+
+      // Fetch all sales and expenses for the selected month for summary calculation
+      const { data: salesDataForMonth, error: salesErrorForMonth } = await supabase
+        .from('sales')
+        .select('amount, payment_type')
+        .eq('user_id', userId)
+        .gte('date', startOfMonth)
+        .lte('date', endOfMonth);
+
+      const { data: expensesDataForMonth, error: expensesErrorForMonth } = await supabase
+        .from('expense_transactions')
+        .select('grand_total, payment_mode')
+        .eq('user_id', userId)
+        .gte('date', startOfMonth)
+        .lte('date', endOfMonth);
+
+      if (salesErrorForMonth) showError("Failed to fetch monthly sales data: " + salesErrorForMonth.message);
+      if (expensesErrorForMonth) showError("Failed to fetch monthly expenses data: " + expensesErrorForMonth.message);
+
+      let monthlyCashSales = 0;
+      let monthlyGpaySales = 0;
+      let monthlyTotalExpenses = 0;
+      let monthlyCashExpenses = 0;
+      let monthlyBankExpenses = 0;
+
+      if (salesDataForMonth) {
+        monthlyCashSales = salesDataForMonth.filter(s => s.payment_type === 'Cash').reduce((sum, s) => sum + s.amount, 0);
+        monthlyGpaySales = salesDataForMonth.filter(s => s.payment_type === 'Gpay').reduce((sum, s) => sum + s.amount, 0);
+      }
+
+      if (expensesDataForMonth) {
+        monthlyTotalExpenses = expensesDataForMonth.reduce((sum, e) => sum + e.grand_total, 0);
+        monthlyCashExpenses = expensesDataForMonth.filter(e => e.payment_mode === 'Cash').reduce((sum, e) => sum + e.grand_total, 0);
+        monthlyBankExpenses = expensesDataForMonth.filter(e => e.payment_mode !== 'Cash').reduce((sum, e) => sum + e.grand_total, 0); // Assuming Gpay/other is bank
+      }
+
+      setMonthlySummary({
+        cashInHand: monthlyCashSales - monthlyCashExpenses,
+        bankBalance: monthlyGpaySales - monthlyBankExpenses,
+        monthlyCashSales,
+        monthlyGpaySales,
+        monthlyTotalExpenses,
+      });
+
+      // Fetch data for the transaction table, applying month/year filter first, then dateRange and searchTerm
+      let salesQueryForTable = supabase.from('sales').select('*').eq('user_id', userId).gte('date', startOfMonth).lte('date', endOfMonth);
+      let expensesQueryForTable = supabase.from('expense_transactions').select('*').eq('user_id', userId).gte('date', startOfMonth).lte('date', endOfMonth);
 
       if (dateRange.from) {
         const fromDate = format(dateRange.from, 'yyyy-MM-dd');
-        salesQuery = salesQuery.gte('date', fromDate);
-        expensesQuery = expensesQuery.gte('date', fromDate);
+        salesQueryForTable = salesQueryForTable.gte('date', fromDate);
+        expensesQueryForTable = expensesQueryForTable.gte('date', fromDate);
       }
       if (dateRange.to) {
         const toDate = format(dateRange.to, 'yyyy-MM-dd');
-        salesQuery = salesQuery.lte('date', toDate);
-        expensesQuery = expensesQuery.lte('date', toDate);
+        salesQueryForTable = salesQueryForTable.lte('date', toDate);
+        expensesQueryForTable = expensesQueryForTable.lte('date', toDate);
       }
 
-      const [{ data: salesData, error: salesError }, { data: transactionsData, error: transactionsError }] = await Promise.all([
-        salesQuery.order('date', { ascending: false }),
-        expensesQuery.order('date', { ascending: false })
+      const [{ data: salesDataForTable, error: salesErrorForTable }, { data: transactionsDataForTable, error: transactionsErrorForTable }] = await Promise.all([
+        salesQueryForTable.order('date', { ascending: false }),
+        expensesQueryForTable.order('date', { ascending: false })
       ]);
 
-      if (salesError) showError("Failed to fetch sales data: " + salesError.message);
-      if (transactionsError) showError("Failed to fetch expense transactions: " + transactionsError.message);
-
-      if (salesData && transactionsData) {
-        const totalCashSales = salesData.filter(s => s.payment_type === 'Cash').reduce((acc, s) => acc + s.amount, 0);
-        const totalBankSales = salesData.filter(s => s.payment_type !== 'Cash').reduce((acc, s) => acc + s.amount, 0);
-        const totalCashExpenses = transactionsData.filter(e => e.payment_mode === 'Cash').reduce((acc, e) => acc + e.grand_total, 0);
-        const totalBankExpenses = transactionsData.filter(e => e.payment_mode !== 'Cash').reduce((acc, e) => acc + e.grand_total, 0);
-        setSummary({
-          cashInHand: totalCashSales - totalCashExpenses,
-          bankBalance: totalBankSales - totalBankExpenses,
-        });
-      } else {
-        setSummary(null);
-      }
+      if (salesErrorForTable) showError("Failed to fetch sales data for table: " + salesErrorForTable.message);
+      if (transactionsErrorForTable) showError("Failed to fetch expense transactions for table: " + transactionsErrorForTable.message);
 
       let combinedTransactions: UnifiedTransaction[] = [];
 
-      if (salesData && (transactionTypeFilter === 'all' || transactionTypeFilter === 'sale')) {
-        const filteredSales = salesData.filter(s => !searchTerm || (s.note && s.note.toLowerCase().includes(searchTerm.toLowerCase())));
+      if (salesDataForTable && (transactionTypeFilter === 'all' || transactionTypeFilter === 'sale')) {
+        const filteredSales = salesDataForTable.filter(s => !searchTerm || (s.note && s.note.toLowerCase().includes(searchTerm.toLowerCase())));
         combinedTransactions.push(...filteredSales.map(s => ({ ...s, type: 'sale' as const })));
       }
 
-      if (transactionsData && (transactionTypeFilter === 'all' || transactionTypeFilter === 'expense')) {
-        const transactionIds = transactionsData.map(t => t.id);
+      if (transactionsDataForTable && (transactionTypeFilter === 'all' || transactionTypeFilter === 'expense')) {
+        const transactionIds = transactionsDataForTable.map(t => t.id);
         let itemsQuery = supabase.from('expense_items').select('*').in('transaction_id', transactionIds);
         
         const { data: itemsData, error: itemsError } = await itemsQuery;
@@ -118,7 +172,7 @@ const Reports = () => {
           return acc;
         }, {} as Record<string, ExpenseItem[]>);
 
-        const filteredExpenses = transactionsData.map(t => ({
+        const filteredExpenses = transactionsDataForTable.map(t => ({
           ...t,
           items: itemsByTransactionId[t.id] || [],
           amount: t.grand_total // Map grand_total to amount for consistency
@@ -132,7 +186,7 @@ const Reports = () => {
       setLoadingData(false);
     };
     if (user) fetchReports();
-  }, [user, dateRange, searchTerm, transactionTypeFilter]);
+  }, [user, dateRange, searchTerm, transactionTypeFilter, selectedMonth, selectedYear]);
 
   const handleDelete = async (type: 'sale' | 'expense', id: string) => {
     if (!confirm("Are you sure?")) return;
@@ -150,7 +204,8 @@ const Reports = () => {
     setDateRange({});
     setSearchTerm('');
     setTransactionTypeFilter('all');
-    setIsFiltersOpen(false);
+    // Keep month/year selection as it's a primary context filter
+    // setIsFiltersOpen(false); // Optionally close filters
   };
 
   return (
@@ -162,48 +217,125 @@ const Reports = () => {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Monthly Summary Section */}
+        <h3 className="text-xl font-semibold mb-4">Monthly Overview ({months[selectedMonth]} {selectedYear})</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {loadingData ? (
+            <>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Sales (Cash)</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {formatCurrencyINR(monthlySummary?.monthlyCashSales || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Sales (Gpay)</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-green-600">
+                    {formatCurrencyINR(monthlySummary?.monthlyGpaySales || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Monthly Total Expenses</CardTitle>
+                  <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-red-600">
+                    {formatCurrencyINR(monthlySummary?.monthlyTotalExpenses || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Cash in Hand</CardTitle>
-              <Wallet className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${summary && summary.cashInHand >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                {formatCurrencyINR(summary?.cashInHand || 0)}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Bank Balance</CardTitle>
-              <Landmark className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-bold ${summary && summary.bankBalance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                {formatCurrencyINR(summary?.bankBalance || 0)}
-              </div>
-            </CardContent>
-          </Card>
+          {loadingData ? (
+            <>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+              <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+            </>
+          ) : (
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Cash in Hand (Monthly Net)</CardTitle>
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${monthlySummary && monthlySummary.cashInHand >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {formatCurrencyINR(monthlySummary?.cashInHand || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Bank Balance (Monthly Net)</CardTitle>
+                  <Landmark className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className={`text-2xl font-bold ${monthlySummary && monthlySummary.bankBalance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                    {formatCurrencyINR(monthlySummary?.bankBalance || 0)}
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen} className="mb-4">
           <CollapsibleTrigger asChild>
             <Button variant="outline" className="w-full justify-between">
               <span className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" /> Filter Reports
+                <Filter className="h-4 w-4 mr-2" /> Filter Transactions
                 {hasActiveFilters && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-semibold bg-primary text-primary-foreground rounded-full">
                     Active
                   </span>
                 )}
               </span>
-              {isFiltersOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              {isFiltersOpen ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />} {/* Changed icons for consistency */}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="p-4 border rounded-b-lg mt-[-1px]">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              {/* Month Selector */}
+              <Select onValueChange={(value) => setSelectedMonth(parseInt(value))} value={selectedMonth.toString()}>
+                <SelectTrigger><SelectValue placeholder="Select Month" /></SelectTrigger>
+                <SelectContent>
+                  {months.map((month, index) => (
+                    <SelectItem key={month} value={index.toString()}>{month}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {/* Year Selector */}
+              <Select onValueChange={(value) => setSelectedYear(parseInt(value))} value={selectedYear.toString()}>
+                <SelectTrigger><SelectValue placeholder="Select Year" /></SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input placeholder="Search by item/note..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select onValueChange={(value: 'all' | 'sale' | 'expense') => setTransactionTypeFilter(value)} value={transactionTypeFilter}>
                 <SelectTrigger><SelectValue placeholder="Filter by type" /></SelectTrigger>
                 <SelectContent>
@@ -238,7 +370,7 @@ const Reports = () => {
           </div>
         ) : allTransactions.length === 0 ? (
           <p className="text-center text-muted-foreground py-4">
-            No transactions found matching your criteria.
+            No transactions found matching your criteria for {months[selectedMonth]} {selectedYear}.
             {transactionTypeFilter === 'all' && (
               <> <Button variant="link" onClick={() => navigate('/add-sale')} className="p-0 h-auto">Add a sale?</Button> or <Button variant="link" onClick={() => navigate('/add-expense')} className="p-0 h-auto">Add an expense?</Button></>
             )}
