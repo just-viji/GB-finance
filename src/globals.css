@@ -5,6 +5,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 @layer base {
+  html {
+    /* Base font size for mobile (18px) */
+    @apply text-[1.125rem]; 
+  }
+  @screen md {
+    html {
+      /* Revert to default base font size (16px) for larger screens */
+      @apply text-base; 
+    }
+  }
+
   :root {
     --background: 220 20% 96%; /* Light Gray */
     --foreground: 222.2 84% 4.9%; /* Near Black */
