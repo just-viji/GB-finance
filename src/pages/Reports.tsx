@@ -189,19 +189,19 @@ const Reports = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Payment Type</TableHead>
-                      <TableHead className="text-right">Amount</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="whitespace-nowrap">Date</TableHead>
+                      <TableHead className="whitespace-nowrap">Payment Type</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
+                      <TableHead className="whitespace-nowrap">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sales.map(s => (
                       <TableRow key={s.id}>
-                        <TableCell>{format(parseISO(s.date), 'PPP')}</TableCell>
-                        <TableCell>{s.payment_type}</TableCell>
-                        <TableCell className="text-right text-green-600">{formatCurrencyINR(s.amount)}</TableCell>
-                        <TableCell className="flex gap-2">
+                        <TableCell className="whitespace-nowrap">{format(parseISO(s.date), 'PPP')}</TableCell>
+                        <TableCell className="whitespace-nowrap">{s.payment_type}</TableCell>
+                        <TableCell className="text-right text-green-600 whitespace-nowrap">{formatCurrencyINR(s.amount)}</TableCell>
+                        <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
                           <Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}>
                             <Edit className="h-4 w-4" />
                           </Button>
@@ -230,13 +230,13 @@ const Reports = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-24"></TableHead> {/* For expand/collapse */}
-                      <TableHead>Date</TableHead>
-                      <TableHead>Payment Mode</TableHead> {/* Added this */}
-                      <TableHead>Items</TableHead>
-                      <TableHead className="text-right">Total</TableHead>
-                      <TableHead>Bill</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="w-fit"></TableHead> {/* For expand/collapse */}
+                      <TableHead className="whitespace-nowrap">Date</TableHead>
+                      <TableHead className="whitespace-nowrap">Payment Mode</TableHead> {/* Added this */}
+                      <TableHead className="whitespace-nowrap">Items</TableHead>
+                      <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                      <TableHead className="whitespace-nowrap">Bill</TableHead>
+                      <TableHead className="whitespace-nowrap">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -260,17 +260,17 @@ const ExpenseRow = ({ expense, onDelete }: { expense: ExpenseTransaction; onDele
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <TableRow>
-        <TableCell>
+        <TableCell className="whitespace-nowrap">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon">{isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</Button>
           </CollapsibleTrigger>
         </TableCell>
-        <TableCell>{format(parseISO(expense.date), 'PPP')}</TableCell>
-        <TableCell>{expense.payment_mode}</TableCell> {/* Added this */}
-        <TableCell>{expense.items.length} item(s)</TableCell>
-        <TableCell className="text-right text-red-600">{formatCurrencyINR(expense.grand_total)}</TableCell>
-        <TableCell>{expense.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={expense.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell>
-        <TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${expense.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button></TableCell>
+        <TableCell className="whitespace-nowrap">{format(parseISO(expense.date), 'PPP')}</TableCell>
+        <TableCell className="whitespace-nowrap">{expense.payment_mode}</TableCell> {/* Added this */}
+        <TableCell className="whitespace-nowrap">{expense.items.length} item(s)</TableCell>
+        <TableCell className="text-right text-red-600 whitespace-nowrap">{formatCurrencyINR(expense.grand_total)}</TableCell>
+        <TableCell className="whitespace-nowrap">{expense.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={expense.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell>
+        <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-expense/${expense.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={onDelete}><Trash2 className="h-4 w-4" /></Button></TableCell>
       </TableRow>
       <CollapsibleContent asChild>
         <tr>
