@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton component
 
 interface Sale { id: string; date: string; amount: number; payment_type: string; note?: string; }
 interface ExpenseItem { id: string; transaction_id: string; item_name: string; total: number; unit: number; price_per_unit: number; }
@@ -175,10 +176,77 @@ const Reports = () => {
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
           </TabsList>
           <TabsContent value="sales">
-            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Payment Type</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{sales.map(s => <TableRow key={s.id}><TableCell>{format(parseISO(s.date), 'PPP')}</TableCell><TableCell>{s.payment_type}</TableCell><TableCell className="text-right text-green-600">{formatCurrencyINR(s.amount)}</TableCell><TableCell className="flex gap-2"><Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}><Edit className="h-4 w-4" /></Button><Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}><Trash2 className="h-4 w-4" /></Button></TableCell></TableRow>)}</TableBody></Table></div>
+            {loadingData ? (
+              <div className="space-y-2 mt-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : sales.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">No sales found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Payment Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sales.map(s => (
+                      <TableRow key={s.id}>
+                        <TableCell>{format(parseISO(s.date), 'PPP')}</TableCell>
+                        <TableCell>{s.payment_type}</TableCell>
+                        <TableCell className="text-right text-green-600">{formatCurrencyINR(s.amount)}</TableCell>
+                        <TableCell className="flex gap-2">
+                          <Button size="icon" variant="outline" onClick={() => navigate(`/edit-sale/${s.id}`)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="destructive" onClick={() => handleDelete('sales', s.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
           <TabsContent value="expenses">
-            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead className="w-24"></TableHead><TableHead>Date</TableHead><TableHead>Items</TableHead><TableHead className="text-right">Total</TableHead><TableHead>Bill</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader><TableBody>{expenses.map(e => <ExpenseRow key={e.id} expense={e} onDelete={() => handleDelete('expense_transactions', e.id)} />)}</TableBody></Table></div>
+            {loadingData ? (
+              <div className="space-y-2 mt-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </div>
+            ) : expenses.length === 0 ? (
+              <p className="text-center text-muted-foreground py-4">No expenses found.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-24"></TableHead> {/* For expand/collapse */}
+                      <TableHead>Date</TableHead>
+                      <TableHead>Payment Mode</TableHead> {/* Added this */}
+                      <TableHead>Items</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Bill</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenses.map(e => (
+                      <ExpenseRow key={e.id} expense={e} onDelete={() => handleDelete('expense_transactions', e.id)} />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>
@@ -198,6 +266,7 @@ const ExpenseRow = ({ expense, onDelete }: { expense: ExpenseTransaction; onDele
           </CollapsibleTrigger>
         </TableCell>
         <TableCell>{format(parseISO(expense.date), 'PPP')}</TableCell>
+        <TableCell>{expense.payment_mode}</TableCell> {/* Added this */}
         <TableCell>{expense.items.length} item(s)</TableCell>
         <TableCell className="text-right text-red-600">{formatCurrencyINR(expense.grand_total)}</TableCell>
         <TableCell>{expense.bill_image_url && <Dialog><DialogTrigger asChild><Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button></DialogTrigger><DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={expense.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent></Dialog>}</TableCell>
@@ -205,7 +274,7 @@ const ExpenseRow = ({ expense, onDelete }: { expense: ExpenseTransaction; onDele
       </TableRow>
       <CollapsibleContent asChild>
         <tr>
-          <td colSpan={6} className="p-0">
+          <td colSpan={7} className="p-0"> {/* Updated colSpan from 6 to 7 */}
             <div className="p-4 bg-muted/50">
               <h4 className="font-semibold mb-2">Items:</h4>
               <Table><TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Unit</TableHead><TableHead>Price/Unit</TableHead><TableHead className="text-right">Total</TableHead></TableRow></TableHeader>
