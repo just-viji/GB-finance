@@ -20,9 +20,9 @@ const QuickActions = () => {
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate(action.path)}
         >
-          <CardContent className="flex flex-col items-center justify-center p-6">
-            <action.icon className={`w-8 h-8 mb-2 ${action.color}`} />
-            <p className="text-sm font-semibold text-center text-foreground">{action.name}</p>
+          <CardContent className="flex flex-col items-center justify-center p-6 h-full">
+            <action.icon className={`w-12 h-12 mb-4 ${action.color}`} /> {/* Increased icon size and margin */}
+            <p className="text-base font-semibold text-center text-foreground">{action.name}</p> {/* Adjusted text size */}
           </CardContent>
         </Card>
       ))}
