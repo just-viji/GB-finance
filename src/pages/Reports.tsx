@@ -171,9 +171,9 @@ const Reports = () => {
         </Collapsible>
 
         <Tabs defaultValue="sales">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="sales">Sales</TabsTrigger>
-            <TabsTrigger value="expenses">Expenses</TabsTrigger>
+          <TabsList className="flex flex-col w-full md:flex-row"> {/* Changed from grid to flex-col for stacking */}
+            <TabsTrigger value="sales" className="w-full md:w-auto">Sales</TabsTrigger>
+            <TabsTrigger value="expenses" className="w-full md:w-auto">Expenses</TabsTrigger>
           </TabsList>
           <TabsContent value="sales">
             {loadingData ? (
