@@ -31,7 +31,7 @@ const AddSale = () => {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { date: new Date(), amount: 0, payment_type: "", note: "" },
+    defaultValues: { date: new Date(), amount: "", payment_type: "", note: "" }, // Changed amount default to empty string
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -50,7 +50,7 @@ const AddSale = () => {
       showError("Failed to add sale: " + error.message);
     } else {
       showSuccess("Sale added successfully!");
-      form.reset({ date: new Date(), amount: 0, payment_type: "", note: "" });
+      form.reset({ date: new Date(), amount: "", payment_type: "", note: "" }); // Reset with empty amount
     }
   };
 
