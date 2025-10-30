@@ -22,41 +22,66 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <motion.div
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
-      >
-        <Card>
-          <CardHeader className="flex flex-col items-center space-y-2 text-center">
-            <img src="/finance-icon.svg" alt="GB Finance Logo" className="h-16 w-16 mb-2" />
-            <CardTitle className="text-3xl font-bold text-primary">GB Finance</CardTitle>
-            <CardDescription>Sign in to manage your finances</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Auth
-              supabaseClient={supabase}
-              providers={[]}
-              appearance={{
-                theme: ThemeSupa,
-                variables: {
-                  default: {
-                    colors: {
-                      brand: 'hsl(var(--primary))',
-                      brandAccent: 'hsl(var(--primary) / 0.8)',
-                    },
-                  },
-                },
-              }}
-              theme="light"
-              redirectTo={window.location.origin + '/'}
-            />
-          </CardContent>
-        </Card>
-      </motion.div>
+    <div className="flex items-center justify-center min-h-screen bg-black">
+  <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl p-10 w-full max-w-md text-center">
+    
+    {/* Logo Section */}
+    <div className="flex flex-col items-center mb-8">
+      <div className="bg-green-500 rounded-xl p-3 shadow-md">
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             fill="none" 
+             viewBox="0 0 24 24" 
+             strokeWidth={2} 
+             stroke="white" 
+             className="w-10 h-10">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 20h16M4 10h16M4 6h16" />
+        </svg>
+      </div>
+      <h1 className="text-3xl font-extrabold text-green-600 mt-4">GB Finance</h1>
+      <p className="text-gray-500">Sign in to manage your finances</p>
     </div>
+
+    {/* Form */}
+    <form className="space-y-5">
+      <div>
+        <input 
+          type="email" 
+          placeholder="Email address"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+                     focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+      <div>
+        <input 
+          type="password" 
+          placeholder="Password"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl 
+                     focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+
+      <button 
+        type="submit"
+        className="w-full bg-gradient-to-r from-green-600 to-black 
+                   text-white font-semibold py-3 rounded-xl 
+                   hover:scale-105 transition-transform">
+        Sign In
+      </button>
+    </form>
+
+    {/* Links */}
+    <div className="mt-6 text-sm text-gray-500">
+      <a href="#" className="hover:text-green-600">Forgot your password?</a>
+      <p className="mt-2">
+        Don't have an account?{" "}
+        <a href="#" className="text-green-600 font-semibold hover:underline">
+          Sign up
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+
   );
 };
 
