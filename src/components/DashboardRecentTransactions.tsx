@@ -19,6 +19,12 @@ interface ExpenseTransaction {
   date: string;
   grand_total: number;
   payment_mode: string;
+  note?: string; // Added note to expense transaction interface
+}
+
+interface ExpenseItem {
+  transaction_id: string;
+  item_name: string;
 }
 
 type Transaction = (Sale & { type: 'sale'; item: string }) | (ExpenseTransaction & { type: 'expense'; item: string; amount: number });
@@ -51,7 +57,7 @@ const DashboardRecentTransactions = () => {
 
       const { data: expensesData, error: expensesError } = await supabase
         .from('expense_transactions')
-        .select('id, date, grand_total, payment_mode')
+        .select('id, date, grand_total, payment_mode, note') // Select note for fallback
         .eq('user_id', userId)
         .gte('date', thirtyDaysAgo)
         .order('date', { ascending: false });
@@ -62,10 +68,42 @@ const DashboardRecentTransactions = () => {
         return;
       }
 
-      const allTransactions: Transaction[] = [
-        ...(salesData || []).map(sale => ({ ...sale, type: 'sale' as const, item: 'Sale' })),
-        ...(expensesData || []).map(expense => ({ ...expense, type: 'expense' as const, item: 'Expense', amount: expense.grand_total })),
-      ];
+      let allTransactions: Transaction[] = [];
+
+      // Process sales
+      allTransactions.push(
+        ...(salesData || []).map(sale => ({ ...sale, type: 'sale' as const, item: 'Sale' }))
+      );
+
+      // Process expenses
+      if (expensesData && expensesData.length > 0) {
+        const transactionIds = expensesData.map(t => t.id);
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('expense_items')
+          .select('transaction_id, item_name')
+          .in('transaction_id', transactionIds);
+
+        if (itemsError) {
+          showError("Failed to fetch expense items for recent transactions.");
+          setLoadingTransactions(false);
+          return;
+        }
+
+        const itemsByTransactionId = (itemsData || []).reduce((acc, item) => {
+          acc[item.transaction_id] = acc[item.transaction_id] || [];
+          acc[item.transaction_id].push(item.item_name);
+          return acc;
+        }, {} as Record<string, string[]>);
+
+        allTransactions.push(
+          ...(expensesData || []).map(expense => ({
+            ...expense,
+            type: 'expense' as const,
+            item: itemsByTransactionId[expense.id]?.join(', ') || expense.note || 'Expense', // Use item names, then note, then 'Expense'
+            amount: expense.grand_total,
+          }))
+        );
+      }
 
       allTransactions.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
 
