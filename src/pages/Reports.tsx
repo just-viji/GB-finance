@@ -66,6 +66,7 @@ const Reports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<'all' | 'sale' | 'expense'>('all');
   const [monthlySummary, setMonthlySummary] = useState<MonthlyFinancialSummary | null>(null);
+  const [filteredTotalAmount, setFilteredTotalAmount] = useState<number>(0); // New state for filtered total
 
   const currentMonth = new Date().getMonth(); // 0-indexed
   const currentYear = new Date().getFullYear();
@@ -191,6 +192,13 @@ const Reports = () => {
 
       combinedTransactions.sort((a, b) => parseISO(b.date).getTime() - parseISO(a.date).getTime());
       setAllTransactions(combinedTransactions);
+
+      // Calculate filtered total amount
+      const currentFilteredTotal = combinedTransactions.reduce((sum, tx) => {
+        return sum + (tx.type === 'sale' ? tx.amount : -tx.amount);
+      }, 0);
+      setFilteredTotalAmount(currentFilteredTotal);
+
       setLoadingData(false);
     };
     if (user) fetchReports();
@@ -354,6 +362,23 @@ const Reports = () => {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* Filtered Total Amount Card */}
+        {hasActiveFilters && !loadingData && allTransactions.length > 0 && (
+          <Card className="mb-6 bg-white border border-gray-200 shadow-sm rounded-2xl">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Filtered Net Total
+              </CardTitle>
+              <Wallet className="h-5 w-5 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-2xl font-semibold ${filteredTotalAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                {formatCurrencyINR(filteredTotalAmount)}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         <Collapsible open={isFiltersOpen} onOpenChange={setIsFiltersOpen} className="mb-4">
