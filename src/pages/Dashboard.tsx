@@ -174,4 +174,26 @@ const Dashboard = () => {
       {/* Recent Transactions */}
       <section>
         {loadingData ? (
-          <
+          <Card className="border-gray-200 shadow-sm rounded-2xl">
+            <CardHeader>
+              <Skeleton className="h-6 w-3/4" />
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <DashboardRecentTransactions />
+        )}
+      </section>
+
+      <MadeWithDyad />
+    </div>
+  );
+};
+
+export default Dashboard;
