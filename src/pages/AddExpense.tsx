@@ -46,7 +46,7 @@ const AddExpense = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       date: new Date(),
-      items: [{ item_name: "", unit: 1, price_per_unit: "", total: 0 }], // Changed price_per_unit default to empty string
+      items: [{ item_name: "", unit: 1, price_per_unit: 0, total: 0 }], // Changed price_per_unit default to 0
       payment_mode: "",
       bill_image_url: "",
       note: "",
@@ -134,7 +134,7 @@ const AddExpense = () => {
       showSuccess("Expense added successfully!");
       form.reset({
         date: new Date(),
-        items: [{ item_name: "", unit: 1, price_per_unit: "", total: 0 }], // Reset with empty price_per_unit
+        items: [{ item_name: "", unit: 1, price_per_unit: 0, total: 0 }], // Reset with 0 for price_per_unit
         payment_mode: "",
         bill_image_url: "",
         note: "",
@@ -201,7 +201,7 @@ const AddExpense = () => {
                 <div className="col-span-2 md:col-span-1">{fields.length > 1 && <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}><MinusCircle className="h-4 w-4" /></Button>}</div>
               </div>
             ))}
-            <Button type="button" variant="outline" onClick={() => append({ item_name: "", unit: 1, price_per_unit: "", total: 0 })} className="w-full"><PlusCircle className="h-4 w-4 mr-2" /> Add Item</Button>
+            <Button type="button" variant="outline" onClick={() => append({ item_name: "", unit: 1, price_per_unit: 0, total: 0 })} className="w-full"><PlusCircle className="h-4 w-4 mr-2" /> Add Item</Button>
             {form.formState.errors.items && <p className="text-red-500 text-sm mt-1">{form.formState.errors.items.message}</p>}
           </div>
 

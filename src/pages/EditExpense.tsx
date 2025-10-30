@@ -94,57 +94,44 @@ const EditExpense = () => {
     if (file) {
       setSelectedFile(file);
       setFilePreviewUrl(URL.createObjectURL(file));
-      setExistingImageUrl(null);
-      form.setValue("bill_image_url", "");
+      setExistingImageUrl(null); // Clear existing image when a new file is selected
+      form.setValue("bill_image_url", ""); // Clear form's bill_image_url
     }
   };
 
   const handleRemoveImage = () => {
     setSelectedFile(null);
     setFilePreviewUrl(null);
-    setExistingImageUrl(null);
-    form.setValue("bill_image_url", "");
+    setExistingImageUrl(null); // Explicitly remove existing image
+    form.setValue("bill_image_url", ""); // Clear form's bill_image_url
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !id) {
-      console.error("User or transaction ID missing.");
+      showError("User or transaction ID missing.");
       return;
     }
     const toastId = showLoading("Updating expense...");
-    let finalBillImageUrl = existingImageUrl;
+    let finalBillImageUrl: string | null = null;
 
     try {
-      console.log("Starting expense update for ID:", id);
-      console.log("Initial form values:", values);
-      console.log("Selected file for upload:", selectedFile);
-      console.log("Existing image URL from DB:", existingImageUrl);
-
       if (selectedFile) {
-        console.log("Uploading new image...");
+        // User selected a new file, upload it
         const filePath = `${user.id}/expenses/${Date.now()}.${selectedFile.name.split('.').pop()}`;
         const { error: uploadError } = await supabase.storage.from('bill_images').upload(filePath, selectedFile, { upsert: true });
         if (uploadError) throw new Error("Failed to upload new image: " + uploadError.message);
         const { data: urlData } = supabase.storage.from('bill_images').getPublicUrl(filePath);
         finalBillImageUrl = urlData.publicUrl;
-        console.log("New image uploaded. URL:", finalBillImageUrl);
-      } else if (existingImageUrl && form.getValues("bill_image_url") === "") {
-        // This condition handles explicit removal of an existing image
-        console.log("Existing image explicitly removed by user.");
-        finalBillImageUrl = null;
-      } else if (!existingImageUrl && !selectedFile) {
-        // No existing image, no new file selected.
-        console.log("No image to upload or update.");
-        finalBillImageUrl = null;
+      } else if (existingImageUrl && values.bill_image_url !== "") {
+        // No new file selected, but there was an existing image and it wasn't explicitly removed
+        finalBillImageUrl = existingImageUrl;
       }
-      // If existingImageUrl is present and no new file selected, finalBillImageUrl remains existingImageUrl.
+      // If selectedFile is null AND existingImageUrl is null (or was explicitly cleared by handleRemoveImage),
+      // then finalBillImageUrl correctly remains null.
 
       const calculatedGrandTotal = values.items.reduce((sum, item) => sum + item.total, 0);
-      console.log("Calculated Grand Total:", calculatedGrandTotal);
-      console.log("Final Bill Image URL for DB:", finalBillImageUrl);
 
-      console.log("Updating expense_transactions table...");
       const { error: transactionError } = await supabase.from('expense_transactions').update({
         date: format(values.date, 'yyyy-MM-dd'),
         payment_mode: values.payment_mode,
@@ -153,24 +140,19 @@ const EditExpense = () => {
         grand_total: calculatedGrandTotal,
       }).eq('id', id);
       if (transactionError) throw new Error("Failed to update transaction: " + transactionError.message);
-      console.log("expense_transactions updated successfully.");
 
-      console.log("Deleting old expense_items...");
+      // Delete old items and insert new ones
       const { error: deleteError } = await supabase.from('expense_items').delete().eq('transaction_id', id);
       if (deleteError) throw new Error("Failed to clear old items: " + deleteError.message);
-      console.log("Old expense_items deleted successfully.");
 
-      console.log("Inserting new expense_items...");
       const itemsToInsert = values.items.map(item => ({ transaction_id: id, user_id: user.id, ...item }));
       const { error: insertError } = await supabase.from('expense_items').insert(itemsToInsert);
       if (insertError) throw new Error("Failed to insert new items: " + insertError.message);
-      console.log("New expense_items inserted successfully.");
 
       showSuccess("Expense updated successfully!");
       navigate('/reports');
     } catch (error: any) {
-      console.error("Error during expense update:", error);
-      showError(error.message);
+      showError(error.message || "An unexpected error occurred.");
     } finally {
       dismissToast(toastId);
     }
