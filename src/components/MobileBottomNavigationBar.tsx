@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, BarChart2, User } from 'lucide-react';
+import { Home, BarChart2, User, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 
@@ -11,6 +11,7 @@ const MobileBottomNavigationBar = () => {
     { name: 'Home', path: '/', icon: Home },
     { name: 'Reports', path: '/reports', icon: BarChart2 },
     { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Settings', path: '/settings', icon: Settings }, // Added Settings link
   ];
 
   return (

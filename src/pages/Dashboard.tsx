@@ -3,12 +3,14 @@ import { MadeWithDyad } from "@/components/made-with-dyad";
 import { useSupabase } from "@/integrations/supabase/supabaseContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, Sparkles } from "lucide-react";
 import DashboardRecentTransactions from "@/components/DashboardRecentTransactions";
 import DashboardChart from "@/components/DashboardChart";
 import QuickActions from "@/components/QuickActions";
 import { formatCurrencyINR } from "@/lib/currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface FinancialSummary {
   totalSales: number;
@@ -18,8 +20,10 @@ interface FinancialSummary {
 
 const Dashboard = () => {
   const { user, profile, isLoading } = useSupabase();
+  const navigate = useNavigate();
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
   const [loadingData, setLoadingData] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
 
   useEffect(() => {
     const fetchFinancialData = async () => {
@@ -47,6 +51,11 @@ const Dashboard = () => {
         (sum, expense) => sum + (expense.grand_total || 0),
         0
       );
+
+      // Check if user is new (no sales or expenses)
+      if (totalSales === 0 && totalExpenses === 0) {
+        setIsNewUser(true);
+      }
 
       setSummary({
         totalSales,
@@ -83,6 +92,37 @@ const Dashboard = () => {
           Here’s your financial overview.
         </p>
       </header>
+
+      {/* Welcome message for new users */}
+      {isNewUser && (
+        <Card className="bg-gradient-to-r from-primary to-primary/80 text-white">
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <Sparkles className="h-8 w-8 mt-1 flex-shrink-0" />
+              <div>
+                <h3 className="text-xl font-bold mb-2">Welcome to GB Finance!</h3>
+                <p className="mb-4">
+                  It looks like you're new here. Start by adding your first sale or expense to begin tracking your finances.
+                </p>
+                <div className="flex gap-2">
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate('/add-sale')}
+                  >
+                    Add First Sale
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    onClick={() => navigate('/add-expense')}
+                  >
+                    Add First Expense
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <QuickActions />

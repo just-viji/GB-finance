@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, BarChart2, User, LogOut } from 'lucide-react';
+import { Home, BarChart2, User, LogOut, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +24,7 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/', icon: Home },
     { name: 'Reports', path: '/reports', icon: BarChart2 },
     { name: 'Profile', path: '/profile', icon: User },
+    { name: 'Settings', path: '/settings', icon: Settings }, // Added Settings link
   ];
 
   return (
