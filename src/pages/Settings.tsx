@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { ArrowLeft, Moon, Sun, Download, Upload } from 'lucide-react';
 import { showError, showSuccess } from '@/utils/toast';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/components/ThemeProvider';
 import DataImport from '@/components/DataImport';
 
 const Settings = () => {
