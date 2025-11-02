@@ -407,8 +407,7 @@ const Reports = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">Date</TableHead>
-                  <TableHead className="whitespace-nowrap">Type</TableHead>
+                  <TableHead className="whitespace-nowrap">Date</TableHead> {/* Now includes type */}
                   <TableHead className="whitespace-nowrap">Category</TableHead>
                   <TableHead className="whitespace-nowrap">Description</TableHead>
                   <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
@@ -441,8 +440,14 @@ const TransactionRow = ({ transaction, onDelete, isDeleteMode }: { transaction: 
 
   return (
     <TableRow>
-      <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'dd/MM/yyyy')}</TableCell>
-      <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
+      <TableCell className="whitespace-nowrap">
+        <div className="flex flex-col">
+          <span className="font-medium">{format(parseISO(transaction.date), 'dd/MM/yyyy')}</span>
+          <span className={cn("text-xs", isExpense ? "text-red-500" : "text-green-500")}>
+            {transaction.type === 'sale' ? 'Sale' : 'Expense'}
+          </span>
+        </div>
+      </TableCell>
       <TableCell className="whitespace-nowrap">{category}</TableCell>
       <TableCell className="whitespace-normal break-words max-w-[150px]">{description}</TableCell>
       <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>
