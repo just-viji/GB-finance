@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Image as ImageIcon, Wallet, Landmark, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Calendar as CalendarIcon, Filter, Wallet, Landmark, TrendingUp, TrendingDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { showSuccess, showError } from '@/utils/toast';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -13,7 +13,6 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { formatCurrencyINR } from '@/lib/currency';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -464,7 +463,6 @@ const Reports = () => {
                   <TableHead className="whitespace-nowrap">Category</TableHead>
                   <TableHead className="whitespace-nowrap">Description</TableHead>
                   <TableHead className="text-right whitespace-nowrap">Amount</TableHead>
-                  <TableHead className="whitespace-nowrap">Bill</TableHead>
                   <TableHead className="whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -497,24 +495,9 @@ const TransactionRow = ({ transaction, onDelete, isDeleteMode }: { transaction: 
       <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'dd/MM/yyyy')}</TableCell>
       <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
       <TableCell className="whitespace-nowrap">{category}</TableCell>
-      <TableCell className="whitespace-normal break-words max-w-[150px]">{description}</TableCell> {/* Added whitespace-normal and break-words */}
+      <TableCell className="whitespace-normal break-words max-w-[150px]">{description}</TableCell>
       <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>
         {isExpense ? '-' : '+'}{formatCurrencyINR(transaction.amount)}
-      </TableCell>
-      <TableCell className="whitespace-nowrap">
-        {isExpense && transaction.bill_image_url && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button size="icon" variant="outline"><ImageIcon className="h-4 w-4" /></Button>
-                </TooltipTrigger>
-                <TooltipContent><p>View Bill</p></TooltipContent>
-              </Tooltip>
-            </DialogTrigger>
-            <DialogContent><DialogHeader><DialogTitle>Bill Image</DialogTitle></DialogHeader><img src={transaction.bill_image_url} alt="Bill" className="w-full h-auto" /></DialogContent>
-          </Dialog>
-        )}
       </TableCell>
       <TableCell className="flex gap-2 flex-nowrap whitespace-nowrap">
         <Tooltip>
