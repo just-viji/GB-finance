@@ -77,9 +77,11 @@ const AddExpense = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log("File selected:", file.name, file.type, file.size);
       setSelectedFile(file);
       setFilePreviewUrl(URL.createObjectURL(file));
     } else {
+      console.log("No file selected.");
       setSelectedFile(null);
       setFilePreviewUrl(null);
     }
@@ -96,14 +98,22 @@ const AddExpense = () => {
 
     try {
       if (selectedFile) {
+        console.log("Attempting to upload file:", selectedFile.name);
         const filePath = `${user.id}/expenses/${Date.now()}.${selectedFile.name.split('.').pop()}`;
         const { error: uploadError } = await supabase.storage.from('bill_images').upload(filePath, selectedFile);
-        if (uploadError) throw new Error("Failed to upload bill image: " + uploadError.message);
+        
+        if (uploadError) {
+          console.error("Supabase upload error:", uploadError);
+          throw new Error("Failed to upload bill image: " + uploadError.message);
+        }
+        
         const { data: publicUrlData } = supabase.storage.from('bill_images').getPublicUrl(filePath);
         finalBillImageUrl = publicUrlData.publicUrl;
+        console.log("Uploaded image public URL:", finalBillImageUrl);
       }
 
       const calculatedGrandTotal = values.items.reduce((sum, item) => sum + item.total, 0);
+      console.log("Calculated Grand Total:", calculatedGrandTotal);
 
       const { data: transactionData, error: transactionError } = await supabase
         .from('expense_transactions')
@@ -118,18 +128,26 @@ const AddExpense = () => {
         .select('id')
         .single();
 
-      if (transactionError) throw new Error(`Failed to create expense transaction: ${transactionError.message}`);
+      if (transactionError) {
+        console.error("Supabase transaction insert error:", transactionError);
+        throw new Error(`Failed to create expense transaction: ${transactionError.message}`);
+      }
       
       const transactionId = transactionData.id;
+      console.log("Transaction created with ID:", transactionId);
 
       const itemsToInsert = values.items.map(item => ({
         transaction_id: transactionId,
         user_id: user.id,
         ...item,
       }));
+      console.log("Items to insert:", itemsToInsert);
 
       const { error: itemsError } = await supabase.from('expense_items').insert(itemsToInsert);
-      if (itemsError) throw new Error(`Failed to add expense items: ${itemsError.message}`);
+      if (itemsError) {
+        console.error("Supabase items insert error:", itemsError);
+        throw new Error(`Failed to add expense items: ${itemsError.message}`);
+      }
 
       showSuccess("Expense added successfully!");
       form.reset({
@@ -143,6 +161,7 @@ const AddExpense = () => {
       setFilePreviewUrl(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error: any) {
+      console.error("Error during expense submission:", error);
       showError(error.message || "An unexpected error occurred.");
     } finally {
       dismissToast(toastId);

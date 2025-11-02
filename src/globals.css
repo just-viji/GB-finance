@@ -6,13 +6,13 @@
 
 @layer base {
   html {
-    /* Base font size for mobile (18px) */
-    @apply text-[1.125rem]; 
+    /* Base font size for mobile (18px reduced by 10% is 16.2px) */
+    @apply text-[1.0125rem]; 
   }
   @screen md {
     html {
-      /* Revert to default base font size (16px) for larger screens */
-      @apply text-base; 
+      /* Revert to default base font size (16px reduced by 10% is 14.4px) for larger screens */
+      @apply text-[0.9rem]; 
     }
   }
 

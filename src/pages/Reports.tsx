@@ -66,7 +66,8 @@ const Reports = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [transactionTypeFilter, setTransactionTypeFilter] = useState<'all' | 'sale' | 'expense'>('all');
   const [monthlySummary, setMonthlySummary] = useState<MonthlyFinancialSummary | null>(null);
-  const [filteredTotalAmount, setFilteredTotalAmount] = useState<number>(0); // New state for filtered total
+  const [filteredTotalAmount, setFilteredTotalAmount] = useState<number>(0);
+  const [isDeleteMode, setIsDeleteMode] = useState(false); // New state for delete mode
 
   const currentMonth = new Date().getMonth(); // 0-indexed
   const currentYear = new Date().getFullYear();
@@ -205,7 +206,7 @@ const Reports = () => {
   }, [user, dateRange, searchTerm, transactionTypeFilter, selectedMonth, selectedYear]);
 
   const handleDelete = async (type: 'sale' | 'expense', id: string) => {
-    if (!confirm("Are you sure?")) return;
+    if (!confirm("Are you sure you want to delete this entry? This action cannot be undone.")) return;
     const table = type === 'sale' ? 'sales' : 'expense_transactions';
     const { error } = await supabase.from(table).delete().eq('id', id);
     if (error) {
@@ -426,6 +427,18 @@ const Reports = () => {
           </CollapsibleContent>
         </Collapsible>
 
+        {/* Toggle for Delete Mode */}
+        <div className="flex justify-end mb-4">
+          <Button
+            variant={isDeleteMode ? "destructive" : "outline"}
+            onClick={() => setIsDeleteMode(!isDeleteMode)}
+            className="flex items-center"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isDeleteMode ? "Exit Delete Mode" : "Enable Delete Mode"}
+          </Button>
+        </div>
+
         {loadingData ? (
           <div className="space-y-2 mt-4">
             <Skeleton className="h-10 w-full" />
@@ -457,7 +470,7 @@ const Reports = () => {
               </TableHeader>
               <TableBody>
                 {allTransactions.map(transaction => (
-                  <TransactionRow key={`${transaction.type}-${transaction.id}`} transaction={transaction} onDelete={handleDelete} />
+                  <TransactionRow key={`${transaction.type}-${transaction.id}`} transaction={transaction} onDelete={handleDelete} isDeleteMode={isDeleteMode} />
                 ))}
               </TableBody>
             </Table>
@@ -468,7 +481,7 @@ const Reports = () => {
   );
 };
 
-const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransaction; onDelete: (type: 'sale' | 'expense', id: string) => void }) => {
+const TransactionRow = ({ transaction, onDelete, isDeleteMode }: { transaction: UnifiedTransaction; onDelete: (type: 'sale' | 'expense', id: string) => void; isDeleteMode: boolean }) => {
   const navigate = useNavigate();
 
   const isExpense = transaction.type === 'expense';
@@ -512,14 +525,16 @@ const TransactionRow = ({ transaction, onDelete }: { transaction: UnifiedTransac
           </TooltipTrigger>
           <TooltipContent><p>{isExpense ? 'Edit Expense' : 'Edit Sale'}</p></TooltipContent>
         </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button size="icon" variant="destructive" onClick={() => onDelete(transaction.type, transaction.id)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent><p>{isExpense ? 'Delete Expense' : 'Delete Sale'}</p></TooltipContent>
-        </Tooltip>
+        {isDeleteMode && ( // Conditionally render delete button
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="destructive" onClick={() => onDelete(transaction.type, transaction.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent><p>{isExpense ? 'Delete Expense' : 'Delete Sale'}</p></TooltipContent>
+          </Tooltip>
+        )}
       </TableCell>
     </TableRow>
   );
