@@ -47,6 +47,36 @@
 
     --radius: 0.5rem;
   }
+
+  :root.dark {
+    --background: 220 20% 10%; /* Dark Slate Gray */
+    --foreground: 210 40% 98%; /* Off-white */
+
+    --card: 220 20% 15%; /* Slightly lighter dark for cards */
+    --card-foreground: 210 40% 98%; /* Off-white */
+
+    --popover: 220 20% 15%; /* Slightly lighter dark for popovers */
+    --popover-foreground: 210 40% 98%; /* Off-white */
+
+    --primary: 221.2 83.2% 65%; /* Lighter Vyapar Blue for dark mode */
+    --primary-foreground: 222.2 84% 4.9%; /* Near Black */
+
+    --secondary: 217.2 32.6% 17.5%; /* Darker gray for secondary */
+    --secondary-foreground: 210 40% 98%; /* Off-white */
+
+    --muted: 217.2 32.6% 17.5%; /* Darker muted background */
+    --muted-foreground: 215.4 16.3% 65%; /* Lighter muted text */
+
+    --accent: 217.2 32.6% 17.5%; /* Darker accent background */
+    --accent-foreground: 210 40% 98%; /* Off-white */
+
+    --destructive: 0 84.2% 60.2%; /* Same Red */
+    --destructive-foreground: 210 40% 98%; /* Off-white */
+
+    --border: 217.2 32.6% 25%; /* Darker border */
+    --input: 217.2 32.6% 25%; /* Darker input background */
+    --ring: 221.2 83.2% 65%; /* Primary Blue */
+  }
 }
 
 @layer base {
