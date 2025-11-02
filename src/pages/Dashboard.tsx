@@ -145,43 +145,43 @@ const Dashboard = () => {
         ) : (
           <>
             <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all rounded-2xl">
-              <CardHeader className="flex justify-between items-center">
+              <CardHeader className="flex justify-between items-center p-4 pb-2">
                 <CardTitle className="text-gray-700 text-sm font-medium">
                   Total Sales
                 </CardTitle>
                 <TrendingUp className="h-5 w-5 text-green-500" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold text-green-600">
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-semibold text-green-600">
                   {formatCurrencyINR(summary?.totalSales || 0)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all rounded-2xl">
-              <CardHeader className="flex justify-between items-center">
+              <CardHeader className="flex justify-between items-center p-4 pb-2">
                 <CardTitle className="text-gray-700 text-sm font-medium">
                   Total Expenses
                 </CardTitle>
                 <TrendingDown className="h-5 w-5 text-red-500" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-semibold text-red-600">
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl font-semibold text-red-600">
                   {formatCurrencyINR(summary?.totalExpenses || 0)}
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all rounded-2xl">
-              <CardHeader className="flex justify-between items-center">
+              <CardHeader className="flex justify-between items-center p-4 pb-2">
                 <CardTitle className="text-gray-700 text-sm font-medium">
                   Net Profit
                 </CardTitle>
                 <Wallet className="h-5 w-5 text-gray-500" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 pt-0">
                 <div
-                  className={`text-2xl font-semibold ${
+                  className={`text-xl font-semibold ${
                     summary && summary.profit >= 0
                       ? "text-green-600"
                       : "text-red-600"
