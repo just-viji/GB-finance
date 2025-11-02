@@ -31,7 +31,6 @@ const formSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
   items: z.array(itemSchema).min(1, "At least one item is required."),
   payment_mode: z.string().min(1, "Payment mode is required."),
-  bill_image_url: z.string().url().optional().or(z.literal('')),
   note: z.string().optional(),
 });
 
@@ -39,10 +38,7 @@ const EditExpense = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { user } = useSupabase();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
-  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null); // Keep this to display existing image if any
 
   const form = useForm<z.infer<typeof formSchema>>({ resolver: zodResolver(formSchema) });
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "items" });
@@ -52,28 +48,22 @@ const EditExpense = () => {
   useEffect(() => {
     const fetchExpense = async () => {
       if (!user || !id) return;
-      console.log("Fetching expense for ID:", id);
       const { data: transactionData, error: transactionError } = await supabase.from('expense_transactions').select('*').eq('id', id).single();
       if (transactionError) {
-        console.error("Failed to fetch expense details:", transactionError);
         showError("Failed to fetch expense details.");
         return navigate('/reports');
       }
-      console.log("Fetched transaction data:", transactionData);
       const { data: itemsData, error: itemsError } = await supabase.from('expense_items').select('*').eq('transaction_id', id);
       if (itemsError) {
-        console.error("Failed to fetch expense items:", itemsError);
         showError("Failed to fetch expense items.");
         return navigate('/reports');
       }
-      console.log("Fetched items data:", itemsData);
       form.reset({
         ...transactionData,
         date: parseISO(transactionData.date),
         items: itemsData || [],
       });
       setExistingImageUrl(transactionData.bill_image_url || null);
-      console.log("Existing image URL:", transactionData.bill_image_url);
     };
     if (user) fetchExpense();
   }, [user, id, navigate, form]);
@@ -95,101 +85,47 @@ const EditExpense = () => {
     return () => subscription.unsubscribe();
   }, [form]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log("New file selected:", file.name, file.type, file.size);
-      setSelectedFile(file);
-      setFilePreviewUrl(URL.createObjectURL(file));
-      setExistingImageUrl(null); // Clear existing image when a new file is selected
-      form.setValue("bill_image_url", ""); // Clear form's bill_image_url
-    } else {
-      console.log("No new file selected.");
-    }
-  };
-
-  const handleRemoveImage = () => {
-    console.log("Removing image.");
-    setSelectedFile(null);
-    setFilePreviewUrl(null);
-    setExistingImageUrl(null); // Explicitly remove existing image
-    form.setValue("bill_image_url", ""); // Clear form's bill_image_url
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !id) {
       showError("User or transaction ID missing.");
       return;
     }
     const toastId = showLoading("Updating expense...");
-    let finalBillImageUrl: string | null = null;
 
     try {
-      if (selectedFile) {
-        console.log("Attempting to upload new file:", selectedFile.name);
-        const filePath = `${user.id}/expenses/${Date.now()}.${selectedFile.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage.from('bill_images').upload(filePath, selectedFile, { upsert: true });
-        if (uploadError) {
-          console.error("Supabase upload error:", uploadError);
-          throw new Error("Failed to upload new image: " + uploadError.message);
-        }
-        const { data: urlData } = supabase.storage.from('bill_images').getPublicUrl(filePath);
-        finalBillImageUrl = urlData.publicUrl;
-        console.log("Uploaded new image public URL:", finalBillImageUrl);
-      } else if (existingImageUrl && values.bill_image_url !== "") {
-        // No new file selected, but there was an existing image and it wasn't explicitly removed
-        finalBillImageUrl = existingImageUrl;
-        console.log("Retaining existing image URL:", finalBillImageUrl);
-      }
-      // If selectedFile is null AND existingImageUrl is null (or was explicitly cleared by handleRemoveImage),
-      // then finalBillImageUrl correctly remains null.
-
       const calculatedGrandTotal = values.items.reduce((sum, item) => sum + item.total, 0);
-      console.log("Calculated Grand Total:", calculatedGrandTotal);
 
       const { error: transactionError } = await supabase.from('expense_transactions').update({
         date: format(values.date, 'yyyy-MM-dd'),
         payment_mode: values.payment_mode,
         note: values.note,
-        bill_image_url: finalBillImageUrl,
+        bill_image_url: existingImageUrl, // Retain existing image URL if present
         grand_total: calculatedGrandTotal,
       }).eq('id', id);
       if (transactionError) {
-        console.error("Supabase transaction update error:", transactionError);
         throw new Error("Failed to update transaction: " + transactionError.message);
       }
-      console.log("Transaction updated successfully.");
 
       // Delete old items and insert new ones
-      console.log("Deleting old expense items for transaction ID:", id);
       const { error: deleteError } = await supabase.from('expense_items').delete().eq('transaction_id', id);
       if (deleteError) {
-        console.error("Supabase items delete error:", deleteError);
         throw new Error("Failed to clear old items: " + deleteError.message);
       }
-      console.log("Old items deleted.");
 
       const itemsToInsert = values.items.map(item => ({ transaction_id: id, user_id: user.id, ...item }));
-      console.log("Inserting new expense items:", itemsToInsert);
       const { error: insertError } = await supabase.from('expense_items').insert(itemsToInsert);
       if (insertError) {
-        console.error("Supabase items insert error:", insertError);
         throw new Error("Failed to insert new items: " + insertError.message);
       }
-      console.log("New items inserted.");
 
       showSuccess("Expense updated successfully!");
       navigate('/reports');
     } catch (error: any) {
-      console.error("Error during expense update:", error);
       showError(error.message || "An unexpected error occurred.");
     } finally {
       dismissToast(toastId);
     }
   };
-
-  const displayImageUrl = filePreviewUrl || existingImageUrl;
 
   return (
     <Card className="w-full max-w-3xl mx-auto">
@@ -247,18 +183,8 @@ const EditExpense = () => {
 
           <Separator />
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label>Bill Image</Label>
-              <Input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} />
-              {displayImageUrl && (
-                <div className="relative mt-2 w-fit">
-                  <img src={displayImageUrl} alt="Bill Preview" className="max-h-40 rounded-md" />
-                  <Button type="button" variant="ghost" size="icon" onClick={handleRemoveImage} className="absolute top-1 right-1 text-red-500"><XCircle className="h-5 w-5" /></Button>
-                </div>
-              )}
-            </div>
-            <div><Label>Note (Optional)</Label><Textarea {...form.register("note")} /></div>
+          <div>
+            <Label>Note (Optional)</Label><Textarea {...form.register("note")} />
           </div>
           
           <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">Update Expense</Button>

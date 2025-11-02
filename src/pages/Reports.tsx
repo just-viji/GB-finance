@@ -497,7 +497,7 @@ const TransactionRow = ({ transaction, onDelete, isDeleteMode }: { transaction: 
       <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'dd/MM/yyyy')}</TableCell>
       <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
       <TableCell className="whitespace-nowrap">{category}</TableCell>
-      <TableCell className="whitespace-nowrap">{description}</TableCell>
+      <TableCell className="whitespace-normal break-words max-w-[150px]">{description}</TableCell> {/* Added whitespace-normal and break-words */}
       <TableCell className={cn("text-right whitespace-nowrap", amountColor)}>
         {isExpense ? '-' : '+'}{formatCurrencyINR(transaction.amount)}
       </TableCell>

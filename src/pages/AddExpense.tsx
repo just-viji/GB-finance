@@ -31,24 +31,19 @@ const formSchema = z.object({
   date: z.date({ required_error: "A date is required." }),
   items: z.array(itemSchema).min(1, "At least one item is required."),
   payment_mode: z.string().min(1, "Payment mode is required."),
-  bill_image_url: z.string().url("Must be a valid URL").optional().or(z.literal('')),
   note: z.string().optional(),
 });
 
 const AddExpense = () => {
   const navigate = useNavigate();
   const { user } = useSupabase();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       date: new Date(),
-      items: [{ item_name: "", unit: 1, price_per_unit: 0, total: 0 }], // Changed price_per_unit default to 0
+      items: [{ item_name: "", unit: 1, price_per_unit: 0, total: 0 }],
       payment_mode: "",
-      bill_image_url: "",
       note: "",
     },
   });
@@ -74,19 +69,6 @@ const AddExpense = () => {
     return () => subscription.unsubscribe();
   }, [form]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log("File selected:", file.name, file.type, file.size);
-      setSelectedFile(file);
-      setFilePreviewUrl(URL.createObjectURL(file));
-    } else {
-      console.log("No file selected.");
-      setSelectedFile(null);
-      setFilePreviewUrl(null);
-    }
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user) {
       showError("You must be logged in to add an expense.");
@@ -94,26 +76,9 @@ const AddExpense = () => {
     }
 
     const toastId = showLoading("Adding expense...");
-    let finalBillImageUrl = values.bill_image_url;
 
     try {
-      if (selectedFile) {
-        console.log("Attempting to upload file:", selectedFile.name);
-        const filePath = `${user.id}/expenses/${Date.now()}.${selectedFile.name.split('.').pop()}`;
-        const { error: uploadError } = await supabase.storage.from('bill_images').upload(filePath, selectedFile);
-        
-        if (uploadError) {
-          console.error("Supabase upload error:", uploadError);
-          throw new Error("Failed to upload bill image: " + uploadError.message);
-        }
-        
-        const { data: publicUrlData } = supabase.storage.from('bill_images').getPublicUrl(filePath);
-        finalBillImageUrl = publicUrlData.publicUrl;
-        console.log("Uploaded image public URL:", finalBillImageUrl);
-      }
-
       const calculatedGrandTotal = values.items.reduce((sum, item) => sum + item.total, 0);
-      console.log("Calculated Grand Total:", calculatedGrandTotal);
 
       const { data: transactionData, error: transactionError } = await supabase
         .from('expense_transactions')
@@ -122,46 +87,37 @@ const AddExpense = () => {
           date: format(values.date, 'yyyy-MM-dd'),
           payment_mode: values.payment_mode,
           note: values.note,
-          bill_image_url: finalBillImageUrl || null,
+          bill_image_url: null, // No bill image upload
           grand_total: calculatedGrandTotal,
         })
         .select('id')
         .single();
 
       if (transactionError) {
-        console.error("Supabase transaction insert error:", transactionError);
         throw new Error(`Failed to create expense transaction: ${transactionError.message}`);
       }
       
       const transactionId = transactionData.id;
-      console.log("Transaction created with ID:", transactionId);
 
       const itemsToInsert = values.items.map(item => ({
         transaction_id: transactionId,
         user_id: user.id,
         ...item,
       }));
-      console.log("Items to insert:", itemsToInsert);
 
       const { error: itemsError } = await supabase.from('expense_items').insert(itemsToInsert);
       if (itemsError) {
-        console.error("Supabase items insert error:", itemsError);
         throw new Error(`Failed to add expense items: ${itemsError.message}`);
       }
 
       showSuccess("Expense added successfully!");
       form.reset({
         date: new Date(),
-        items: [{ item_name: "", unit: 1, price_per_unit: 0, total: 0 }], // Reset with 0 for price_per_unit
+        items: [{ item_name: "", unit: 1, price_per_unit: 0, total: 0 }],
         payment_mode: "",
-        bill_image_url: "",
         note: "",
       });
-      setSelectedFile(null);
-      setFilePreviewUrl(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error: any) {
-      console.error("Error during expense submission:", error);
       showError(error.message || "An unexpected error occurred.");
     } finally {
       dismissToast(toastId);
@@ -231,16 +187,9 @@ const AddExpense = () => {
 
           <Separator />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="bill_image_upload">Bill Image (Optional)</Label>
-              <Input id="bill_image_upload" type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} />
-              {filePreviewUrl && <img src={filePreviewUrl} alt="Bill Preview" className="mt-2 max-h-40 rounded-md" />}
-            </div>
-            <div>
-              <Label htmlFor="note">Note (Optional)</Label>
-              <Textarea id="note" {...form.register("note")} />
-            </div>
+          <div>
+            <Label htmlFor="note">Note (Optional)</Label>
+            <Textarea id="note" {...form.register("note")} />
           </div>
 
           <Button type="submit" className="w-full bg-destructive hover:bg-destructive/90">Add Expense</Button>
