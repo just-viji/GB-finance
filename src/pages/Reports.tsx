@@ -253,114 +253,63 @@ const Reports = () => {
           </Select>
         </div>
 
-        {/* Monthly Summary Section - Individual Card View */}
+        {/* Monthly Summary Section - Table View */}
         <h3 className="text-xl font-semibold mb-4">Monthly Overview</h3>
         {loadingData ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-4 w-1/2" /></CardHeader><CardContent><Skeleton className="h-8 w-3/4" /></CardContent></Card>
+          <div className="space-y-2 mb-6">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            {/* Sales Summary */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Total Monthly Sales</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-xl font-bold text-primary sm:text-2xl">
-                  {formatCurrencyINR(monthlySummary?.totalMonthlySales || 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Sales (Cash)</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-xl font-bold text-green-600 sm:text-2xl">
-                  {formatCurrencyINR(monthlySummary?.monthlyCashSales || 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Sales (Gpay)</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-xl font-bold text-green-600 sm:text-2xl">
-                  {formatCurrencyINR(monthlySummary?.monthlyGpaySales || 0)}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Expenses Summary */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Total Expenses</CardTitle>
-                <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-xl font-bold text-red-600 sm:text-2xl">
-                  {formatCurrencyINR(monthlySummary?.monthlyTotalExpenses || 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Expenses (Cash)</CardTitle>
-                <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-xl font-bold text-red-600 sm:text-2xl">
-                  {formatCurrencyINR(monthlySummary?.monthlyCashExpenses || 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Monthly Expenses (Gpay)</CardTitle>
-                <TrendingDown className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className="text-xl font-bold text-red-600 sm:text-2xl">
-                  {formatCurrencyINR(monthlySummary?.monthlyGpayExpenses || 0)}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Net Balances */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Cash in Hand (Monthly Net)</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className={`text-xl font-bold ${monthlySummary && monthlySummary.cashInHand >= 0 ? 'text-primary' : 'text-destructive'} sm:text-2xl`}>
-                  {formatCurrencyINR(monthlySummary?.cashInHand || 0)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
-                <CardTitle className="text-sm font-medium">Bank Balance (Monthly Net)</CardTitle>
-                <Landmark className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
-                <div className={`text-xl font-bold ${monthlySummary && monthlySummary.bankBalance >= 0 ? 'text-primary' : 'text-destructive'} sm:text-2xl`}>
-                  {formatCurrencyINR(monthlySummary?.bankBalance || 0)}
-                </div>
-              </CardContent>
-            </Card>
+          <div className="overflow-x-auto mb-6">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-medium">Total Monthly Sales</TableCell>
+                  <TableCell className="text-right text-primary font-semibold">{formatCurrencyINR(monthlySummary?.totalMonthlySales || 0)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="pl-8">Cash Sales</TableCell>
+                  <TableCell className="text-right text-green-600">{formatCurrencyINR(monthlySummary?.monthlyCashSales || 0)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="pl-8">Gpay Sales</TableCell>
+                  <TableCell className="text-right text-green-600">{formatCurrencyINR(monthlySummary?.monthlyGpaySales || 0)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-medium">Total Monthly Expenses</TableCell>
+                  <TableCell className="text-right text-destructive font-semibold">{formatCurrencyINR(monthlySummary?.monthlyTotalExpenses || 0)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="pl-8">Cash Expenses</TableCell>
+                  <TableCell className="text-right text-red-600">{formatCurrencyINR(monthlySummary?.monthlyCashExpenses || 0)}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="pl-8">Gpay Expenses</TableCell>
+                  <TableCell className="text-right text-red-600">{formatCurrencyINR(monthlySummary?.monthlyGpayExpenses || 0)}</TableCell>
+                </TableRow>
+                <TableRow className="bg-muted">
+                  <TableCell className="font-bold">Cash in Hand (Monthly Net)</TableCell>
+                  <TableCell className={cn("text-right font-bold", monthlySummary && monthlySummary.cashInHand >= 0 ? 'text-primary' : 'text-destructive')}>
+                    {formatCurrencyINR(monthlySummary?.cashInHand || 0)}
+                  </TableCell>
+                </TableRow>
+                <TableRow className="bg-muted">
+                  <TableCell className="font-bold">Bank Balance (Monthly Net)</TableCell>
+                  <TableCell className={cn("text-right font-bold", monthlySummary && monthlySummary.bankBalance >= 0 ? 'text-primary' : 'text-destructive')}>
+                    {formatCurrencyINR(monthlySummary?.bankBalance || 0)}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
           </div>
         )}
 
