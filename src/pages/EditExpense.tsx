@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar as CalendarIcon, ArrowLeft, PlusCircle, MinusCircle, XCircle } from 'lucide-react';
-import { Popover, PopoverContent, PopoverTrigger } => '@/components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, parseISO } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -242,7 +242,7 @@ const EditExpense = () => {
 
           <div className="p-4 bg-muted rounded-lg flex justify-between items-center">
             <span className="text-lg font-bold">Grand Total</span>
-            <span className="text-2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
+            <span className="2xl font-bold text-destructive">{formatCurrencyINR(grandTotal)}</span>
           </div>
 
           <Separator />
