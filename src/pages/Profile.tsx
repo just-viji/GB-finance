@@ -147,7 +147,7 @@ const Profile = () => {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-4 sm:p-6">
         <div className="flex flex-col items-center space-y-4 mb-6">
           <Avatar className="h-24 w-24 border-2 border-primary">
             <AvatarImage src={currentAvatarUrl} alt="User Avatar" />

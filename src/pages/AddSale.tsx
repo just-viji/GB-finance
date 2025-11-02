@@ -76,7 +76,7 @@ const AddSale = () => {
                   className={cn("w-full justify-start text-left font-normal", !form.watch("date") && "text-muted-foreground")}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {form.watch("date") ? format(form.watch("date"), "PPP") : <span>Pick a date</span>}
+                  {form.watch("date") ? format(form.watch("date"), "dd/MM/yyyy") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0">

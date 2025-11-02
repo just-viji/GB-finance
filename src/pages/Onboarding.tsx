@@ -55,7 +55,7 @@ const Onboarding = () => {
           <CardTitle className="text-2xl font-bold text-primary">Welcome to GB Finance</CardTitle>
           <p className="text-muted-foreground">Let's set up your account</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {step === 1 && (
             <div className="space-y-4">
               <div className="text-center mb-6">

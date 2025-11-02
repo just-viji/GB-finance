@@ -271,34 +271,34 @@ const Reports = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Sales Summary */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Total Monthly Sales</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-primary">
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className="text-xl font-bold text-primary sm:text-2xl">
                   {formatCurrencyINR(monthlySummary?.totalMonthlySales || 0)}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Sales (Cash)</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className="text-xl font-bold text-green-600 sm:text-2xl">
                   {formatCurrencyINR(monthlySummary?.monthlyCashSales || 0)}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Sales (Gpay)</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className="text-xl font-bold text-green-600 sm:text-2xl">
                   {formatCurrencyINR(monthlySummary?.monthlyGpaySales || 0)}
                 </div>
               </CardContent>
@@ -306,34 +306,34 @@ const Reports = () => {
 
             {/* Expenses Summary */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Total Expenses</CardTitle>
                 <TrendingDown className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className="text-xl font-bold text-red-600 sm:text-2xl">
                   {formatCurrencyINR(monthlySummary?.monthlyTotalExpenses || 0)}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Expenses (Cash)</CardTitle>
                 <TrendingDown className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className="text-xl font-bold text-red-600 sm:text-2xl">
                   {formatCurrencyINR(monthlySummary?.monthlyCashExpenses || 0)}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Monthly Expenses (Gpay)</CardTitle>
                 <TrendingDown className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-600">
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className="text-xl font-bold text-red-600 sm:text-2xl">
                   {formatCurrencyINR(monthlySummary?.monthlyGpayExpenses || 0)}
                 </div>
               </CardContent>
@@ -341,23 +341,23 @@ const Reports = () => {
 
             {/* Net Balances */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Cash in Hand (Monthly Net)</CardTitle>
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${monthlySummary && monthlySummary.cashInHand >= 0 ? 'text-primary' : 'text-destructive'}`}>
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className={`text-xl font-bold ${monthlySummary && monthlySummary.cashInHand >= 0 ? 'text-primary' : 'text-destructive'} sm:text-2xl`}>
                   {formatCurrencyINR(monthlySummary?.cashInHand || 0)}
                 </div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
                 <CardTitle className="text-sm font-medium">Bank Balance (Monthly Net)</CardTitle>
                 <Landmark className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
-                <div className={`text-2xl font-bold ${monthlySummary && monthlySummary.bankBalance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+              <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+                <div className={`text-xl font-bold ${monthlySummary && monthlySummary.bankBalance >= 0 ? 'text-primary' : 'text-destructive'} sm:text-2xl`}>
                   {formatCurrencyINR(monthlySummary?.bankBalance || 0)}
                 </div>
               </CardContent>
@@ -368,14 +368,14 @@ const Reports = () => {
         {/* Filtered Total Amount Card */}
         {hasActiveFilters && !loadingData && allTransactions.length > 0 && (
           <Card className="mb-6 bg-white border border-gray-200 shadow-sm rounded-2xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 sm:p-4 sm:pb-2">
               <CardTitle className="text-sm font-medium">
                 Filtered Net Total
               </CardTitle>
               <Wallet className="h-5 w-5 text-gray-500" />
             </CardHeader>
-            <CardContent>
-              <div className={`text-2xl font-semibold ${filteredTotalAmount >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
+              <div className={`text-xl font-semibold ${filteredTotalAmount >= 0 ? 'text-green-600' : 'text-red-600'} sm:text-2xl`}>
                 {formatCurrencyINR(filteredTotalAmount)}
               </div>
             </CardContent>
@@ -413,7 +413,7 @@ const Reports = () => {
                 <PopoverTrigger asChild>
                   <Button variant={"outline"} className={cn("justify-start text-left font-normal", !dateRange.from && "text-muted-foreground")}>
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dateRange.from ? (dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")) : <span>Pick a date range</span>}
+                    {dateRange.from ? (dateRange.to ? `${format(dateRange.from, "dd/MM/yyyy")} - ${format(dateRange.to, "dd/MM/yyyy")}` : format(dateRange.from, "dd/MM/yyyy")) : <span>Pick a date range</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start"><Calendar mode="range" selected={dateRange} onSelect={setDateRange} /></PopoverContent>
@@ -494,7 +494,7 @@ const TransactionRow = ({ transaction, onDelete, isDeleteMode }: { transaction: 
 
   return (
     <TableRow>
-      <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'PPP')}</TableCell>
+      <TableCell className="whitespace-nowrap">{format(parseISO(transaction.date), 'dd/MM/yyyy')}</TableCell>
       <TableCell className="whitespace-nowrap">{transaction.type === 'sale' ? 'Sale' : 'Expense'}</TableCell>
       <TableCell className="whitespace-nowrap">{category}</TableCell>
       <TableCell className="whitespace-nowrap">{description}</TableCell>

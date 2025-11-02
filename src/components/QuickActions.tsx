@@ -19,9 +19,9 @@ const QuickActions = () => {
           className="hover:shadow-lg transition-shadow cursor-pointer"
           onClick={() => navigate(action.path)}
         >
-          <CardContent className="flex flex-col items-center justify-center p-6 h-full">
-            <action.icon className={`w-12 h-12 mb-4 ${action.color}`} />
-            <p className="text-base font-semibold text-center text-foreground">{action.name}</p>
+          <CardContent className="flex flex-col items-center justify-center p-4 sm:p-6 h-full">
+            <action.icon className={`w-10 h-10 sm:w-12 sm:h-12 mb-4 ${action.color}`} />
+            <p className="text-sm sm:text-base font-semibold text-center text-foreground">{action.name}</p>
           </CardContent>
         </Card>
       ))}

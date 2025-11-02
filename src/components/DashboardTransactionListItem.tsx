@@ -21,7 +21,7 @@ const DashboardTransactionListItem: React.FC<TransactionListItemProps> = ({
   paymentType,
   paymentMode,
 }) => {
-  const formattedDate = isValid(parseISO(date)) ? format(parseISO(date), 'MMM dd, yyyy') : date;
+  const formattedDate = isValid(parseISO(date)) ? format(parseISO(date), 'dd/MM/yyyy') : date;
   const isSale = type === 'sale';
   const icon = isSale ? <ArrowUpCircle className="h-5 w-5 text-green-500" /> : <ArrowDownCircle className="h-5 w-5 text-red-500" />;
   const amountColor = isSale ? 'text-green-600' : 'text-red-600';
